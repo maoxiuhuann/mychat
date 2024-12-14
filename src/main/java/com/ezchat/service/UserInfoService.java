@@ -1,10 +1,14 @@
 package com.ezchat.service;
 
+import com.ezchat.entity.dto.TokenUserInfoDTO;
 import com.ezchat.entity.vo.PaginationResultVO;
 import com.ezchat.entity.po.UserInfo;
 import com.ezchat.entity.query.UserInfoQuery;
+import com.ezchat.exception.BusinessException;
 
 import java.util.List;
+import java.util.Map;
+
 /**
  * @Description:用户信息Service
  * @author:xiuyuan
@@ -72,4 +76,18 @@ public interface UserInfoService {
 	 */
 	Integer deleteUserInfoByEmail(String email);
 
+	/**
+	 * 注册
+	 * @param email
+	 * @param nickname
+	 * @param password
+	 */
+	void register (String email, String nickname, String password) throws BusinessException;
+
+	/**
+	 * 登录
+	 * @param email
+	 * @param password
+	 */
+	TokenUserInfoDTO login(String email, String password) throws BusinessException;
 }
