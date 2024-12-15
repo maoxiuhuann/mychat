@@ -4,6 +4,7 @@ import com.ezchat.entity.dto.TokenUserInfoDTO;
 import com.ezchat.entity.vo.PaginationResultVO;
 import com.ezchat.entity.po.UserInfo;
 import com.ezchat.entity.query.UserInfoQuery;
+import com.ezchat.entity.vo.UserInfoVo;
 import com.ezchat.exception.BusinessException;
 
 import java.util.List;
@@ -89,5 +90,5 @@ public interface UserInfoService {
 	 * @param email
 	 * @param password
 	 */
-	TokenUserInfoDTO login(String email, String password) throws BusinessException;
+	UserInfoVo login(String email, String password) throws BusinessException;
 }

@@ -1,5 +1,6 @@
 package com.ezchat.service.impl;
 
+import com.ezchat.constans.Constans;
 import com.ezchat.entity.config.AppConfig;
 import com.ezchat.entity.dto.TokenUserInfoDTO;
 import com.ezchat.entity.po.UserInfoVip;
@@ -8,24 +9,23 @@ import com.ezchat.entity.query.UserInfoVipQuery;
 import com.ezchat.entity.vo.PaginationResultVO;
 import com.ezchat.entity.po.UserInfo;
 import com.ezchat.entity.query.UserInfoQuery;
-import com.ezchat.enums.PageSize;
-import com.ezchat.enums.UserContactTypeEnum;
-import com.ezchat.enums.UserStatusEnum;
-import com.ezchat.enums.VipAccountStatusEnum;
+import com.ezchat.entity.vo.UserInfoVo;
+import com.ezchat.enums.*;
 import com.ezchat.exception.BusinessException;
 import com.ezchat.mappers.UserInfoMapper;
 import com.ezchat.mappers.UserInfoVipMapper;
+import com.ezchat.redis.RedisComponent;
 import com.ezchat.service.UserInfoService;
+import com.ezchat.utils.CopyUtils;
 import com.ezchat.utils.StringUtils;
 import jodd.util.ArraysUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @Description:用户信息Service
@@ -35,7 +35,7 @@ import java.util.Map;
 @Service("userInfoService")
 public class UserInfoServiceImpl implements UserInfoService {
 
-    @Autowired
+    @Resource
     private UserInfoMapper<UserInfo, UserInfoQuery> userInfoMapper;
 
     @Autowired
@@ -43,6 +43,10 @@ public class UserInfoServiceImpl implements UserInfoService {
 
     @Autowired
     private AppConfig appConfig;
+
+    @Autowired
+    public RedisComponent redisComponent;
+
 
     /**
      * 根据条件查询列表
@@ -148,10 +152,11 @@ public class UserInfoServiceImpl implements UserInfoService {
      * @param password
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void register(String email, String nickname, String password) throws BusinessException {
         UserInfo userInfo = this.userInfoMapper.selectByEmail(email);
         //阻断式处理，不符合条件的直接抛出异常，只处理符合条件的情况
-        if(null != userInfo){
+        if (null != userInfo) {
             throw new BusinessException("邮箱被注册");
         }
         String userId = StringUtils.getUserId();
@@ -171,6 +176,7 @@ public class UserInfoServiceImpl implements UserInfoService {
         userInfo.setNickName(nickname);
         userInfo.setCreateTime(currDate);
         userInfo.setStatus(UserStatusEnum.ENABLE.getStatus());
+        userInfo.setJoinType(JoinTypeEnum.APPLY.getType());
         userInfo.setLastOffTime(currDate.getTime());
         this.userInfoMapper.insert(userInfo);
 
@@ -182,91 +188,43 @@ public class UserInfoServiceImpl implements UserInfoService {
         }
         //TODO 注册完创建机器人好友-发送迎新消息
 
-
-        /*修改前做法
-        Map<String, Object> result = new HashMap<>();
-        UserInfo userInfo = this.userInfoMapper.selectByEmail(email);
-        if (null == userInfo) {
-            String userId = StringUtils.getUserId();
-            UserInfoVip vipAccount = this.userInfoVipMapper.selectByEmail(email);
-            //1.靓号必须存在 2.靓号没有使用 根据这两点判断是否可以使用靓号
-            Boolean useVipAccount = null != vipAccount && VipAccountStatusEnum.NO_USE.getStatus().equals(vipAccount.getStatus());
-            if (useVipAccount) {
-                userId = UserContactTypeEnum.USER.getPrefix() + StringUtils.getRandomNumber(11);
-            }
-
-            //插入新数据到数据库
-            Date currDate = new Date();
-            userInfo = new UserInfo();
-            userInfo.setUserId(userId);
-            userInfo.setEmail(email);
-            userInfo.setPassword(StringUtils.encodeMd5(password));
-            userInfo.setNickName(nickname);
-            userInfo.setCreateTime(currDate);
-            userInfo.setStatus(UserStatusEnum.ENABLE.getStatus());
-            userInfo.setLastOffTime(currDate.getTime());
-            this.userInfoMapper.insert(userInfo);
-
-            //更新靓号的使用状态
-            if (useVipAccount) {
-                UserInfoVip updateVip = new UserInfoVip();
-                updateVip.setStatus(VipAccountStatusEnum.USED.getStatus());
-                this.userInfoVipMapper.updateByUserId(updateVip, vipAccount.getUserId());
-            }
-        } else {
-            result.put("success", false);
-            result.put("errorMsg", "邮箱已存在");
-        }
-        return result;
-        */
     }
 
     /**
-     * 登录-返回token
+     * 登录-返回用户信息
      *
      * @param email
      * @param password
      */
     @Override
-    public TokenUserInfoDTO login(String email, String password) throws BusinessException {
+    public UserInfoVo login(String email, String password) throws BusinessException {
 
-        Map<String, Object> result = new HashMap<>();
         UserInfo userInfo = this.userInfoMapper.selectByEmail(email);
+        //用用户心跳判断用户是否在其他地方登录
+        Long lastHeartBeat = redisComponent.getUserHeartBeat(userInfo.getUserId());
         //阻断式处理，不符合条件的直接抛出异常，只处理符合条件的情况
-        if(null == userInfo || !userInfo.getPassword().equals(password)){
+        if (null == userInfo || !StringUtils.encodeMd5(password).equals(userInfo.getPassword())) {
             throw new BusinessException("账号或密码错误");
         }
-        if(UserStatusEnum.DISABLE.getStatus().equals(userInfo.getStatus())){
+        if (UserStatusEnum.DISABLE.getStatus().equals(userInfo.getStatus())) {
             throw new BusinessException("账号已停用");
         }
-        //TODO 查询我的群组、联系人
-        TokenUserInfoDTO tokenUserInfoDTO = getTokenUserInfoDTO(userInfo);
-        return tokenUserInfoDTO;
-
-        /*修改前代码
-        Map<String, Object> result = new HashMap<>();
-        UserInfo userInfo = this.userInfoMapper.selectByEmail(email);
-        if (null == userInfo) {
-            result.put("success", false);
-            result.put("errorMsg", "账号不存在");
-        } else {
-            if (!userInfo.getPassword().equals(password)) {
-                result.put("success", false);
-                result.put("errorMsg", "密码错误");
-            } else {
-                if (!userInfo.getStatus().equals(UserStatusEnum.ENABLE.getStatus())) {
-                    result.put("success", false);
-                    result.put("errorMsg", "账号已停用");
-                } else {
-                    TokenUserInfoDTO tokenUserInfoDTO = getTokenUserInfoDTO(userInfo);
-                    result.put("data", tokenUserInfoDTO);
-                    result.put("success", true);
-                }
-            }
+        if (null != lastHeartBeat) {
+            throw new BusinessException("账号已在其他地方登录");
         }
-        return result;
-        */
+        //TODO 查询我的群组
+        // TODO 查询我的联系人
+        TokenUserInfoDTO tokenUserInfoDTO = getTokenUserInfoDTO(userInfo);
+        //保存登录信息tokenUserInfoDTO到redis
+        String token = StringUtils.encodeMd5(tokenUserInfoDTO.getUserId() + StringUtils.getRandomString(Constans.LENGTH_20));
+        tokenUserInfoDTO.setToken(token);
+        redisComponent.saveTokenUserInfoDTO(tokenUserInfoDTO);
+        //将当前用户信息userInfoVo存储到vo对象中返回
+        UserInfoVo userInfoVo = CopyUtils.copy(userInfo, UserInfoVo.class);
+        userInfoVo.setToken(tokenUserInfoDTO.getToken());
+        userInfoVo.setAdmin(tokenUserInfoDTO.getAdmin());
 
+        return userInfoVo;
     }
 
     /**

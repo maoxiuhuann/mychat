@@ -1,5 +1,6 @@
 package com.ezchat.mappers;
 
+import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 /**
@@ -7,6 +8,7 @@ import org.apache.ibatis.annotations.Param;
  * @author:xiuyuan
  * @date:2024/12/11
  */
+@Mapper
 public interface UserInfoMapper<T, P> extends BaseMapper {
 	/**
 	 * 根据UserId查询数据
@@ -37,6 +39,4 @@ public interface UserInfoMapper<T, P> extends BaseMapper {
 	 * 根据Email删除数据
 	 */
 	Integer deleteByEmail(@Param("email") String email);
-
-
 }

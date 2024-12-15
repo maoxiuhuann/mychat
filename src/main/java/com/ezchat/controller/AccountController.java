@@ -1,15 +1,17 @@
 package com.ezchat.controller;
 
 import com.ezchat.constans.Constans;
-import com.ezchat.entity.dto.TokenUserInfoDTO;
 import com.ezchat.entity.vo.ResponseVo;
 
+import com.ezchat.entity.vo.UserInfoVo;
 import com.ezchat.exception.BusinessException;
+import com.ezchat.redis.RedisComponent;
 import com.ezchat.redis.RedisUtils;
 import com.ezchat.service.UserInfoService;
 import com.wf.captcha.ArithmeticCaptcha;
 
 
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
@@ -21,20 +23,23 @@ import javax.validation.constraints.NotEmpty;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.logging.Logger;
+
 
 @RestController("accountController")
 @RequestMapping("/account")
 @Validated
 public class AccountController extends ABaseController {
 
-    private static final Logger logger = (Logger) LoggerFactory.getLogger(AccountController.class);
+    private static final Logger logger = LoggerFactory.getLogger(AccountController.class);
 
     @Autowired
     private RedisUtils redisUtils;
 
     @Autowired
     private UserInfoService userInfoService;
+
+    @Autowired
+    private RedisComponent redisComponent;
 
     /**
      * 登录注册-验证码逻辑
@@ -67,14 +72,14 @@ public class AccountController extends ABaseController {
     @RequestMapping("/register")
     public ResponseVo register(@NotEmpty String checkCodeKey,
                                @NotEmpty @Email String email,
-                               @NotEmpty String passWord,
+                               @NotEmpty String password,
                                @NotEmpty String nickName,
                                @NotEmpty String checkCode) throws BusinessException {
         try {
             if (!checkCode.equalsIgnoreCase((String) redisUtils.get(Constans.REDIS_KEY_CHECK_CODE + checkCodeKey))) {
                 throw new BusinessException("图片验证码错误");
             }
-            userInfoService.register(email, passWord, nickName);
+            userInfoService.register(email, nickName, password);
             return getSuccessResponseVo(null);
         } finally {
             redisUtils.delete(Constans.REDIS_KEY_CHECK_CODE + checkCodeKey);
@@ -89,16 +94,27 @@ public class AccountController extends ABaseController {
     @RequestMapping("/login")
     public ResponseVo login(@NotEmpty String checkCodeKey,
                                 @NotEmpty @Email String email,
-                                @NotEmpty String passWord,
+                                @NotEmpty String password,
                                 @NotEmpty String checkCode) throws BusinessException {
         try {
             if (!checkCode.equalsIgnoreCase((String) redisUtils.get(Constans.REDIS_KEY_CHECK_CODE + checkCodeKey))) {
                 throw new BusinessException("图片验证码错误");
             }
-            TokenUserInfoDTO tokenUserInfoDTO = userInfoService.login(email, passWord);
+            UserInfoVo userInfoVo = userInfoService.login(email, password);
             return getSuccessResponseVo(null);
         } finally {
             redisUtils.delete(Constans.REDIS_KEY_CHECK_CODE + checkCodeKey);
         }
+    }
+
+    /**
+     * 获取系统设置
+     *
+     * @return
+     * @throws BusinessException
+     */
+    @RequestMapping("/getSysSetting")
+    public ResponseVo getSysSettings() throws BusinessException {
+        return getSuccessResponseVo(redisComponent.getSysSetting());
     }
 }
