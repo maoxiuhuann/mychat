@@ -1,5 +1,6 @@
 package com.ezchat.controller;
 
+import com.ezchat.annotation.GlobalInterceptor;
 import com.ezchat.constans.Constans;
 import com.ezchat.entity.vo.ResponseVo;
 
@@ -113,6 +114,7 @@ public class AccountController extends ABaseController {
      * @return
      * @throws BusinessException
      */
+    @GlobalInterceptor
     @RequestMapping("/getSysSetting")
     public ResponseVo getSysSettings() throws BusinessException {
         return getSuccessResponseVo(redisComponent.getSysSetting());
