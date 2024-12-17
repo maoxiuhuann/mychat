@@ -15,7 +15,7 @@ public class CopyUtils {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            BeanUtils.copyProperties(t, s);
+            BeanUtils.copyProperties(s, t);
             list.add(t);
         }
         return list;
@@ -28,7 +28,7 @@ public class CopyUtils {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        BeanUtils.copyProperties(t, s);
+        BeanUtils.copyProperties(s, t);
         return t;
     }
 }

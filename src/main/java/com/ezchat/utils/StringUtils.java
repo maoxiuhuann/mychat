@@ -57,11 +57,22 @@ public class StringUtils {
 
     /**
      * 生成12位用户ID
+     *
      * @return
      */
     public static String getUserId() {
         //添加前缀区别用户账号和群账号
         return UserContactTypeEnum.USER.getPrefix() + getRandomNumber(Constans.LENGTH_11);
+    }
+
+    /**
+     * 生成12位群ID
+     *
+     * @return
+     */
+    public static String getGroupId() {
+        //添加前缀区别用户账号和群账号
+        return UserContactTypeEnum.GROUP.getPrefix() + getRandomNumber(Constans.LENGTH_11);
     }
 
     //生成11位随机数，作为用户账号
@@ -75,6 +86,6 @@ public class StringUtils {
 
     //md5加密
     public static String encodeMd5(String str) {
-        return StringUtils.isEmpty(str)?null: DigestUtils.md5Hex(str);
+        return StringUtils.isEmpty(str) ? null : DigestUtils.md5Hex(str);
     }
 }

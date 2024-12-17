@@ -30,9 +30,9 @@ public class RedisComponent {
      */
     public void saveTokenUserInfoDTO(TokenUserInfoDTO tokenUserInfoDTO) {
         //可以通过token获取tokenUserInfoDTO
-        redisUtils.setex(Constans.REDIS_KEY_WS_TOKEN + tokenUserInfoDTO.getToken(), tokenUserInfoDTO, Constans.REDIS_TIME_1DAY * 2);
+        redisUtils.setex(Constans.REDIS_KEY_WS_TOKEN + tokenUserInfoDTO.getToken(), tokenUserInfoDTO, Constans.REDIS_TIME_1DAY / 2);
         //可以通过userid获取token
-        redisUtils.setex(Constans.REDIS_KEY_WS_TOKEN_USERID + tokenUserInfoDTO.getToken(), tokenUserInfoDTO.getToken(), Constans.REDIS_TIME_1DAY * 2);
+        redisUtils.setex(Constans.REDIS_KEY_WS_TOKEN_USERID + tokenUserInfoDTO.getToken(), tokenUserInfoDTO.getToken(), Constans.REDIS_TIME_1DAY / 2);
     }
 
     public SysSettingDTO getSysSetting() {

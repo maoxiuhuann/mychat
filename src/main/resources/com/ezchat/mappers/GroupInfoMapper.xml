@@ -94,9 +94,6 @@
 
 	<!--插入（匹配有值的字段）-->
 	<insert id="insert" parameterType="com.ezchat.entity.po.GroupInfo">
-		<selectKey keyProperty="bean.groupId" resultType="String" order="AFTER">
-			SELECT LAST_INSERT_ID()
-		</selectKey>
 		INSERT INTO group_info
 		<trim prefix="(" suffix=")" suffixOverrides=",">
 			<if test="bean.groupId != null">

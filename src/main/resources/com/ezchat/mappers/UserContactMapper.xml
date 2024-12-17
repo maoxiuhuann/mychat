@@ -180,6 +180,12 @@
 		</trim>
 		ON DUPLICATE KEY UPDATE
 		<trim prefix="" suffix="" suffixOverrides=",">
+		    <if test="bean.userId != null">
+				user_id = VALUES(user_id),
+			</if>
+			<if test="bean.contactId != null">
+				contact_id = VALUES(contact_id),
+			</if>
 			<if test="bean.contactType != null">
 				contact_type = VALUES(contact_type),
 			</if>

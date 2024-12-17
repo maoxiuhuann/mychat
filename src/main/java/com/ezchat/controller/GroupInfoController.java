@@ -5,7 +5,9 @@ import com.ezchat.entity.dto.TokenUserInfoDTO;
 import com.ezchat.entity.po.GroupInfo;
 import com.ezchat.entity.query.GroupInfoQuery;
 import com.ezchat.entity.vo.ResponseVo;
+import com.ezchat.exception.BusinessException;
 import com.ezchat.service.GroupInfoService;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -15,6 +17,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -24,24 +27,62 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/group")
+@Validated
 public class GroupInfoController extends ABaseController {
 
-	@Resource
-	private GroupInfoService groupInfoService;
+    @Resource
+    private GroupInfoService groupInfoService;
 
-	@RequestMapping("/saveGroup")
-	@GlobalInterceptor
-	public ResponseVo saveGroup(HttpServletRequest request,
-								String groupId,
-								@NotEmpty String groupName,
-								String groupNotice,
-								@NotNull String joinType,
-								MultipartFile avatarFile,//头像文件-原图和缩略图
-								MultipartFile avatarCover) {
+    /**
+     * 保存群组信息-新增或修改
+     *
+     * @param request
+     * @param groupId
+     * @param groupName
+     * @param groupNotice
+     * @param joinType
+     * @param avatarFile
+     * @param avatarCover
+     * @return
+     */
+    @RequestMapping("/saveGroup")
+    @GlobalInterceptor
+    public ResponseVo saveGroup(HttpServletRequest request,
+                                String groupId,
+                                @NotEmpty String groupName,
+                                String groupNotice,
+                                @NotNull Integer joinType,
+                                MultipartFile avatarFile,//头像文件-原图和缩略图
+                                MultipartFile avatarCover) throws IOException, BusinessException {
 
-		//从header中获取token、使用AOP保证token不为空即用户已经登陆
-		TokenUserInfoDTO tokenUserInfoDTO = getTokenUserInfo(request);
-		return getSuccessResponseVo(null);
-	}
+        //从header中获取token-已经使用AOP保证token不为空即用户已经登陆
+        TokenUserInfoDTO tokenUserInfoDTO = getTokenUserInfo(request);
+        GroupInfo groupInfo = new GroupInfo();
+        groupInfo.setGroupId(groupId);
+        groupInfo.setGroupName(groupName);
+        groupInfo.setGroupNotice(groupNotice);
+        groupInfo.setGroupOwnerId(tokenUserInfoDTO.getUserId());
+        groupInfo.setJoinType(joinType);
+        this.groupInfoService.saveGroup(groupInfo, avatarFile, avatarCover);
+        return getSuccessResponseVo(null);
+    }
 
+
+    /**
+     * 加载我创建的群组列表
+     *
+     * @param request
+     * @return
+     */
+    @RequestMapping("/loadMyGroup")
+    @GlobalInterceptor
+    public ResponseVo loadMyGroup(HttpServletRequest request) {
+        //从header中获取token-已经使用AOP保证token不为空即用户已经登陆
+        TokenUserInfoDTO tokenUserInfoDTO = getTokenUserInfo(request);
+        GroupInfoQuery groupInfoQuery = new GroupInfoQuery();
+        groupInfoQuery.setGroupOwnerId(tokenUserInfoDTO.getUserId());
+        groupInfoQuery.setOrderBy("create_time desc");
+        List<GroupInfo> groupInfoList = this.groupInfoService.findListByParam(groupInfoQuery);
+        return getSuccessResponseVo(groupInfoList);
+    }
 }
