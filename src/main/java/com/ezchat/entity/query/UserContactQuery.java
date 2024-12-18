@@ -47,6 +47,11 @@ public class UserContactQuery extends BaseQuery {
 	 */
 	private Date lastUpdateTime;
 
+	/**
+	 * 是否查询用户信息
+	 */
+	private Boolean queryUserInfo;
+
 	private String lastUpdateTimeStart;
 
 	private String lastUpdateTimeEnd;
@@ -147,4 +152,11 @@ public class UserContactQuery extends BaseQuery {
 		return this.lastUpdateTimeEnd;
 	}
 
+	public Boolean getQueryUserInfo() {
+		return queryUserInfo;
+	}
+
+	public void setQueryUserInfo(Boolean queryUserInfo) {
+		this.queryUserInfo = queryUserInfo;
+	}
 }

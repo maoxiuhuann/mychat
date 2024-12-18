@@ -50,6 +50,32 @@ public class UserContact implements Serializable {
 	@DateTimeFormat(pattern="yyyy-MM-dd HH:mm:ss")
 	private Date lastUpdateTime;
 
+	/**
+	 * 联系人昵称
+	 */
+	private String contactName;
+
+	/**
+	 * 联系人性别
+	 */
+	private Integer sex;
+
+	public String getContactName() {
+		return contactName;
+	}
+
+	public void setContactName(String contactName) {
+		this.contactName = contactName;
+	}
+
+	public Integer getSex() {
+		return sex;
+	}
+
+	public void setSex(Integer sex) {
+		this.sex = sex;
+	}
+
 	public void setUserId(String userId) {
 		this.userId = userId;
 	}

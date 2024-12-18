@@ -53,6 +53,19 @@ public class GroupInfo implements Serializable {
 	@JsonIgnore
 	private Integer status;
 
+	public Integer getMemberCount() {
+		return memberCount;
+	}
+
+	public void setMemberCount(Integer memberCount) {
+		this.memberCount = memberCount;
+	}
+
+	/**
+	 * 群成员数量
+	 */
+	private Integer memberCount;
+
 	public void setGroupId(String groupId) {
 		this.groupId = groupId;
 	}
