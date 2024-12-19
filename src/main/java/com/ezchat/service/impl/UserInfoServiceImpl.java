@@ -200,7 +200,7 @@ public class UserInfoServiceImpl implements UserInfoService {
     public UserInfoVo login(String email, String password) throws BusinessException {
 
         UserInfo userInfo = this.userInfoMapper.selectByEmail(email);
-        //用用户心跳判断用户是否在其他地方登录
+        //用户心跳判断用户是否在其他地方登录
         Long lastHeartBeat = redisComponent.getUserHeartBeat(userInfo.getUserId());
         //阻断式处理，不符合条件的直接抛出异常，只处理符合条件的情况
         if (null == userInfo || !StringUtils.encodeMd5(password).equals(userInfo.getPassword())) {

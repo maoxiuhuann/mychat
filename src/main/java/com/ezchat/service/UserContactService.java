@@ -1,8 +1,11 @@
 package com.ezchat.service;
 
+import com.ezchat.entity.dto.TokenUserInfoDTO;
+import com.ezchat.entity.dto.UserContactSearchResultDTO;
 import com.ezchat.entity.vo.PaginationResultVO;
 import com.ezchat.entity.po.UserContact;
 import com.ezchat.entity.query.UserContactQuery;
+import com.ezchat.exception.BusinessException;
 
 import java.util.List;
 /**
@@ -57,4 +60,16 @@ public interface UserContactService {
 	 */
 	Integer deleteUserContactByUserIdAndContactId(String userId, String contactId);
 
+	/**
+	 * 搜索联系人
+	 * @param userId
+	 * @param contactId
+	 */
+	UserContactSearchResultDTO searchContact(String userId, String contactId);
+
+	/**
+	 * 申请添加联系人
+	 * @return
+	 */
+	Integer applyAdd(TokenUserInfoDTO tokenUserInfoDTO, String contactId,String applyInfo) throws BusinessException;
 }

@@ -36,4 +36,7 @@ public class Constans {
     public static final String IMAGE_SUFFIX = ".png";
 
     public static final String COVER_IMAGE_SUFFIX = "_cover.png";
+
+    //默认申请理由
+    public static final String DEFAULT_APPLY_REASON = "我是%s";
 }

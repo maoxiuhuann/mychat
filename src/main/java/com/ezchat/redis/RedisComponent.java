@@ -35,6 +35,10 @@ public class RedisComponent {
         redisUtils.setex(Constans.REDIS_KEY_WS_TOKEN_USERID + tokenUserInfoDTO.getToken(), tokenUserInfoDTO.getToken(), Constans.REDIS_TIME_1DAY);
     }
 
+    /**
+     * 获取系统设置信息
+     * @return
+     */
     public SysSettingDTO getSysSetting() {
         SysSettingDTO sysSettingDTO = (SysSettingDTO) redisUtils.get(Constans.REDIS_KEY_SYS_SETTING);
         sysSettingDTO = sysSettingDTO == null ? new SysSettingDTO() : sysSettingDTO;
