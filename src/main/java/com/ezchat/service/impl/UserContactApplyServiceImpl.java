@@ -1,15 +1,24 @@
 package com.ezchat.service.impl;
 
+import com.ezchat.entity.po.UserContact;
 import com.ezchat.entity.query.SimplePage;
+import com.ezchat.entity.query.UserContactQuery;
 import com.ezchat.entity.vo.PaginationResultVO;
 import com.ezchat.entity.po.UserContactApply;
 import com.ezchat.entity.query.UserContactApplyQuery;
 import com.ezchat.enums.PageSize;
+import com.ezchat.enums.ResponseCodeEnum;
+import com.ezchat.enums.UserContactApplyStatusEnum;
+import com.ezchat.enums.UserContactStatusEnum;
+import com.ezchat.exception.BusinessException;
 import com.ezchat.mappers.UserContactApplyMapper;
+import com.ezchat.mappers.UserContactMapper;
 import com.ezchat.service.UserContactApplyService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -22,6 +31,9 @@ public class UserContactApplyServiceImpl implements UserContactApplyService {
 
 	@Resource
 	private UserContactApplyMapper<UserContactApply, UserContactApplyQuery> userContactApplyMapper;
+
+	@Resource
+	private UserContactMapper<UserContact, UserContactQuery> userContactMapper;
 
 	/**
 	 * 根据条件查询列表
@@ -118,5 +130,57 @@ public class UserContactApplyServiceImpl implements UserContactApplyService {
 	public Integer deleteUserContactApplyByApplyUserIdAndReceiveUserIdAndContactId(String applyUserId, String receiveUserId, String contactId) {
 		return this.userContactApplyMapper.deleteByApplyUserIdAndReceiveUserIdAndContactId(applyUserId, receiveUserId, contactId);
 	}
+
+	/**
+	 * 处理申请
+	 * @param userId
+	 * @param applyId
+	 * @param status
+	 */
+    @Override
+	@Transactional(rollbackFor = Exception.class)
+    public void dealWithApply(String userId, Integer applyId, Integer status) throws BusinessException {
+		UserContactApplyStatusEnum statusEnum = UserContactApplyStatusEnum.getByStatus(status);
+		// 不处理默认状态的申请
+		if (statusEnum == null || UserContactApplyStatusEnum.INIT.equals(statusEnum)){
+			throw new BusinessException(ResponseCodeEnum.CODE_600);
+		}
+		// 根据applyId查询申请信息
+		UserContactApply applyInfo = this.userContactApplyMapper.selectByApplyId(applyId);
+		// 后端校验申请信息是否存在以及是否为当前用户在操作
+		if (applyInfo == null || !userId.equals(applyInfo.getReceiveUserId())) {
+			throw new BusinessException(ResponseCodeEnum.CODE_601);
+		}
+		// 更新申请状态：  	update user_contact_apply set `status` = ?,last_off_time = ? where apply_id = ?
+		UserContactApply updateInfo = new UserContactApply();
+		updateInfo.setStatus(status);
+		updateInfo.setLastApplyTime(System.currentTimeMillis());
+        //限制只能在原状态下修改状态  	update user_contact_apply set `status` = ?,last_off_time = ? where apply_id = ? and `status` = 0
+		//区别就在拼接的where条件中增加了status=0，只能操作未处理的申请
+		UserContactApplyQuery query = new UserContactApplyQuery();
+		query.setApplyId(applyId);
+		query.setStatus(UserContactApplyStatusEnum.INIT.getStatus());
+		//TODO 在ezjava中新增这样的方法
+		Integer count = this.userContactApplyMapper.updateByParam(updateInfo, query);
+		if (count == 0){
+			throw new BusinessException(ResponseCodeEnum.CODE_600);
+		}
+
+		if (UserContactApplyStatusEnum.PASS.getStatus().equals(status)){
+			//TODO 添加联系人
+		}
+
+		if (UserContactApplyStatusEnum.BLACKLIST.getStatus().equals(status)){
+			Date currentDate = new Date();
+			UserContact userContact = new UserContact();
+			userContact.setUserId(applyInfo.getApplyUserId());
+			userContact.setContactId(applyInfo.getContactId());
+			userContact.setContactType(applyInfo.getContactType());
+			userContact.setCreateTime(currentDate);
+			userContact.setStatus(UserContactStatusEnum.BLACKLIST_BE.getStatus());
+			userContact.setLastUpdateTime(currentDate);
+			userContactMapper.insertOrUpdate(userContact);
+		}
+    }
 
 }

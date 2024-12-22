@@ -51,6 +51,11 @@ public class UserContactApply implements Serializable {
 	 */
 	private String applyInfo;
 
+	/**
+	 * 被申请人查看好友申请列表时的联系人名称
+	 */
+	private String contactName;
+
 	public void setApplyId(Integer applyId) {
 		this.applyId = applyId;
 	}
@@ -118,5 +123,13 @@ public class UserContactApply implements Serializable {
 	@Override
 	public String toString() {
 		return "自增ID:" + (applyId == null ? "空" : applyId) + ",申请人ID:" + (applyUserId == null ? "空" : applyUserId) + ",接收人ID:" + (receiveUserId == null ? "空" : receiveUserId) + ",联系人类型 0:好友 1:群组:" + (contactType == null ? "空" : contactType) + ",联系人群组ID:" + (contactId == null ? "空" : contactId) + ",最后申请时间:" + (lastApplyTime == null ? "空" : lastApplyTime) + ",状态 0:待处理 1:已同意 2:已拒绝 3:已拉黑:" + (status == null ? "空" : status) + ",申请信息:" + (applyInfo == null ? "空" : applyInfo);
+	}
+
+	public String getContactName() {
+		return contactName;
+	}
+
+	public void setContactName(String contactName) {
+		this.contactName = contactName;
 	}
 }

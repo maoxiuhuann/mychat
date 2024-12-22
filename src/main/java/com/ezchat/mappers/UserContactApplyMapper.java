@@ -38,5 +38,13 @@ public interface UserContactApplyMapper<T, P> extends BaseMapper {
 	 */
 	Integer deleteByApplyUserIdAndReceiveUserIdAndContactId(@Param("applyUserId") String applyUserId, @Param("receiveUserId") String receiveUserId, @Param("contactId") String contactId);
 
+	/**
+	 * 根据限定条件query更新数据
+	 */
+	Integer updateByParam(@Param("bean")T t, @Param("query") P p);
 
+	/**
+	 * 根据限定条件query删除数据
+	 */
+	Integer deleteByParam(@Param("bean")T t, @Param("query") P p);
 }
