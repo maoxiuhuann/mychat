@@ -82,4 +82,14 @@ public interface UserContactApplyService {
 	 */
     void dealWithApply(String userId, Integer applyId, Integer status) throws BusinessException;
 
+    /**
+     * 添加联系人
+     * @param applyUserID
+     * @param receiveUserID
+     * @param contactId
+     * @param contactType
+     * @param applyInfo
+     */
+    void addContact(String applyUserID, String receiveUserID, String contactId, Integer contactType,String applyInfo) throws BusinessException;
+
 }

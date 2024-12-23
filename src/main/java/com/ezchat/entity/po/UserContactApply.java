@@ -1,6 +1,8 @@
 package com.ezchat.entity.po;
 
 import java.io.Serializable;
+
+import com.ezchat.enums.UserContactApplyStatusEnum;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 
@@ -55,6 +57,11 @@ public class UserContactApply implements Serializable {
 	 * 被申请人查看好友申请列表时的联系人名称
 	 */
 	private String contactName;
+
+	/**
+	 * 状态名称
+	 */
+	private String statusName;
 
 	public void setApplyId(Integer applyId) {
 		this.applyId = applyId;
@@ -131,5 +138,14 @@ public class UserContactApply implements Serializable {
 
 	public void setContactName(String contactName) {
 		this.contactName = contactName;
+	}
+
+	public String getStatusName() {
+		UserContactApplyStatusEnum statusEnum = UserContactApplyStatusEnum.getByStatus(status);
+		return statusName == null ? null : statusEnum.getDesc();
+	}
+
+	public void setStatusName(String statusName) {
+		this.statusName = statusName;
 	}
 }

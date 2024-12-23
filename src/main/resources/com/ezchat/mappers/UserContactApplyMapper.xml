@@ -278,7 +278,7 @@
     </insert>
 
     <!-- 多条件修改 -->
-    <update id="updateByParam" parameterType="com.ezchat.entity.query.UserContactApplyQuery">
+    <update id="updateByQuery" parameterType="com.ezchat.entity.query.UserContactApplyQuery">
         UPDATE user_contact_apply a
         <set>
             <if test="bean.applyUserId != null">
@@ -306,9 +306,9 @@
         <include refid="query_condition"></include>
     </update>
 
-    <!-- 多条件删除 -->
+    <!--多条件删除-->
     <delete id="deleteByParam">
-        delete from user_contact_apply
+        DELETE FROM user_contact_apply
         <include refid="query_condition"></include>
     </delete>
 

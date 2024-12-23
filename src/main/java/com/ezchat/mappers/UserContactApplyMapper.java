@@ -41,7 +41,7 @@ public interface UserContactApplyMapper<T, P> extends BaseMapper {
 	/**
 	 * 根据限定条件query更新数据
 	 */
-	Integer updateByParam(@Param("bean")T t, @Param("query") P p);
+	Integer updateByQuery(@Param("bean")T t, @Param("query") P p);
 
 	/**
 	 * 根据限定条件query删除数据

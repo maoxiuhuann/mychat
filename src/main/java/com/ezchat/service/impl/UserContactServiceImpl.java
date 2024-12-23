@@ -15,6 +15,7 @@ import com.ezchat.mappers.GroupInfoMapper;
 import com.ezchat.mappers.UserContactApplyMapper;
 import com.ezchat.mappers.UserContactMapper;
 import com.ezchat.mappers.UserInfoMapper;
+import com.ezchat.service.UserContactApplyService;
 import com.ezchat.service.UserContactService;
 import com.ezchat.utils.CopyUtils;
 import com.ezchat.utils.StringUtils;
@@ -43,6 +44,9 @@ public class UserContactServiceImpl implements UserContactService {
 
     @Resource
     private UserContactApplyMapper<UserContactApply, UserContactApplyQuery> userContactApplyMapper;
+
+    @Resource
+    private UserContactApplyService userContactApplyService;
 
     /**
      * 根据条件查询列表
@@ -208,7 +212,7 @@ public class UserContactServiceImpl implements UserContactService {
         }
         //直接加入不用添加申请记录
         if (JoinTypeEnum.JOIN.getType().equals(joinType)) {
-            //TODO 添加联系人
+            this.userContactApplyService.addContact(applyUserId, receiveUserId, contactId, contactTypeEnum.getType(), applyInfo);
             return joinType;
         }
         //查询是否已经有申请记录
@@ -231,7 +235,7 @@ public class UserContactServiceImpl implements UserContactService {
             apply.setApplyInfo(applyInfo);
             this.userContactApplyMapper.updateByApplyId(apply, dbApply.getApplyId());
         }
-        if (dbApply == null || !UserContactApplyStatusEnum.INIT.getStatus().TYPE.equals(dbApply.getStatus())){
+        if (dbApply == null || !UserContactApplyStatusEnum.INIT.getStatus().TYPE.equals(dbApply.getStatus())) {
             //TODO 发送申请信息给接收方
         }
         return joinType;
