@@ -168,7 +168,7 @@ public class UserContactApplyServiceImpl implements UserContactApplyService {
         if (count == 0) {
             throw new BusinessException(ResponseCodeEnum.CODE_600);
         }
-
+        // 处理同意申请，双方双向添加好友关系
         if (UserContactApplyStatusEnum.PASS.getStatus().equals(status)) {
             this.addContact(applyInfo.getApplyUserId(), applyInfo.getReceiveUserId(), applyInfo.getContactId(), applyInfo.getContactType(), applyInfo.getApplyInfo());
         }

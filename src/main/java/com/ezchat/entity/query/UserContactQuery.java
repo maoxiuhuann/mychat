@@ -52,9 +52,36 @@ public class UserContactQuery extends BaseQuery {
 	 */
 	private Boolean queryUserInfo;
 
+	/**
+	 * 是否查询群组信息
+	 */
+	private Boolean queryGroupInfo;
+
+	/**
+	 * 是否查询联系人用户信息
+	 */
+	private Boolean queryContactUserInfo;
+
+	/**
+	 * 是否过滤掉自己创建的群组
+	 */
+	private Boolean excludeMyGroup;
+
+	/**
+	 * 状态数组-有些状态的联系人需要过滤掉
+	 */
+	private Integer[] statusArray;
+
+	/**
+	 * 标志拉黑时是否是好友
+	 */
+	private Boolean FormerFriend;
+
 	private String lastUpdateTimeStart;
 
 	private String lastUpdateTimeEnd;
+
+
 
 	public void setUserId(String userId) {
 		this.userId = userId;
@@ -158,5 +185,45 @@ public class UserContactQuery extends BaseQuery {
 
 	public void setQueryUserInfo(Boolean queryUserInfo) {
 		this.queryUserInfo = queryUserInfo;
+	}
+
+	public Boolean getQueryGroupInfo() {
+		return queryGroupInfo;
+	}
+
+	public void setQueryGroupInfo(Boolean queryGroupInfo) {
+		this.queryGroupInfo = queryGroupInfo;
+	}
+
+	public Boolean getQueryContactUserInfo() {
+		return queryContactUserInfo;
+	}
+
+	public void setQueryContactUserInfo(Boolean queryContactUserInfo) {
+		this.queryContactUserInfo = queryContactUserInfo;
+	}
+
+	public Boolean getExcludeMyGroup() {
+		return excludeMyGroup;
+	}
+
+	public void setExcludeMyGroup(Boolean excludeMyGroup) {
+		this.excludeMyGroup = excludeMyGroup;
+	}
+
+	public Integer[] getStatusArray() {
+		return statusArray;
+	}
+
+	public void setStatusArray(Integer[] statusArray) {
+		this.statusArray = statusArray;
+	}
+
+	public Boolean getFormerFriend() {
+		return FormerFriend;
+	}
+
+	public void setFormerFriend(Boolean formerFriend) {
+		FormerFriend = formerFriend;
 	}
 }

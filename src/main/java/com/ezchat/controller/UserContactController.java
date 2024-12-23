@@ -4,10 +4,15 @@ package com.ezchat.controller;
 import com.ezchat.annotation.GlobalInterceptor;
 import com.ezchat.entity.dto.TokenUserInfoDTO;
 import com.ezchat.entity.dto.UserContactSearchResultDTO;
+import com.ezchat.entity.po.UserContact;
 import com.ezchat.entity.query.UserContactApplyQuery;
+import com.ezchat.entity.query.UserContactQuery;
 import com.ezchat.entity.vo.PaginationResultVO;
 import com.ezchat.entity.vo.ResponseVo;
 import com.ezchat.enums.PageSize;
+import com.ezchat.enums.ResponseCodeEnum;
+import com.ezchat.enums.UserContactStatusEnum;
+import com.ezchat.enums.UserContactTypeEnum;
 import com.ezchat.exception.BusinessException;
 import com.ezchat.service.UserContactApplyService;
 import com.ezchat.service.UserContactService;
@@ -19,6 +24,8 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import java.util.Iterator;
+import java.util.List;
 
 @RestController
 @RequestMapping("/contact")
@@ -80,6 +87,7 @@ public class UserContactController extends ABaseController {
         query.setReceiveUserId(tokenUserInfoDTO.getUserId());
         query.setPageNo(pageNo);
         query.setPageSize(PageSize.SIZE15.getSize());
+        //加载申请人的昵称-用户查看自己的申请列表时，需要显示申请人的昵称
         query.setQueryContactInfo(true);
         //TODO 根据实际sql更新xml文件：例如表取别名及时在相关代码中更新
         //SELECT 查询的sql语句
@@ -115,5 +123,41 @@ public class UserContactController extends ABaseController {
         TokenUserInfoDTO tokenUserInfoDTO = getTokenUserInfo(request);
         this.userContactApplyService.dealWithApply(tokenUserInfoDTO.getUserId(), applyId, status);
         return getSuccessResponseVo(null);
+    }
+
+    /**
+     * 加载联系人列表
+     *
+     * @param request
+     * @param contactType
+     * @return
+     * @throws BusinessException
+     */
+    @RequestMapping("/loadContact")
+    @GlobalInterceptor
+    public ResponseVo loadContact(HttpServletRequest request, @NotNull String contactType) throws BusinessException {
+        UserContactTypeEnum contactTypeEnum = UserContactTypeEnum.getByName(contactType);
+        if (null == contactTypeEnum) {
+            throw new BusinessException(ResponseCodeEnum.CODE_600);
+        }
+        TokenUserInfoDTO tokenUserInfoDTO = getTokenUserInfo(request);
+        UserContactQuery query = new UserContactQuery();
+        query.setUserId(tokenUserInfoDTO.getUserId());
+        query.setContactType(contactTypeEnum.getType());
+        // todo 如果用户首次向对方发生申请就被拉黑了，则对方不显示在自己的联系人列表中
+        if (contactTypeEnum.USER == contactTypeEnum) {
+            //加载联系人的昵称-用户查看自己的联系人列表时，需要显示联系人的昵称
+            query.setQueryContactUserInfo(true);
+        } else if (contactTypeEnum.GROUP == contactTypeEnum) {
+            query.setQueryGroupInfo(true);
+            //过滤自己创建的群组
+            query.setExcludeMyGroup(true);
+        }
+        query.setOrderBy("last_update_time desc");
+        //状态数组-有些状态的联系人需要过滤掉-被好友拉黑能够看到好友，但是不能发消息
+        query.setStatusArray(new Integer[]{UserContactStatusEnum.FRIEND.getStatus(), UserContactStatusEnum.DEL_BE.getStatus(), UserContactStatusEnum.BLACKLIST_BE.getStatus()});
+        List<UserContact> contactList = userContactService.findListByParam(query);
+        //TODO 向对方发送申请对方没同意过就被被拉黑的，则对方不显示在自己的联系人列表中
+        return getSuccessResponseVo(contactList);
     }
 }
