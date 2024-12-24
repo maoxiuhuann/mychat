@@ -5,6 +5,7 @@ import com.ezchat.entity.dto.UserContactSearchResultDTO;
 import com.ezchat.entity.vo.PaginationResultVO;
 import com.ezchat.entity.po.UserContact;
 import com.ezchat.entity.query.UserContactQuery;
+import com.ezchat.enums.UserContactStatusEnum;
 import com.ezchat.exception.BusinessException;
 
 import java.util.List;
@@ -72,4 +73,22 @@ public interface UserContactService {
 	 * @return
 	 */
 	Integer applyAdd(TokenUserInfoDTO tokenUserInfoDTO, String contactId,String applyInfo) throws BusinessException;
+
+	/**
+	 * 添加联系人
+	 * @param applyUserID
+	 * @param receiveUserID
+	 * @param contactId
+	 * @param contactType
+	 * @param applyInfo
+	 */
+	void addContact(String applyUserID, String receiveUserID, String contactId, Integer contactType,String applyInfo) throws BusinessException;
+
+	/**
+	 * 拉黑或者删除好友
+	 * @param userId
+	 * @param contactId
+	 * @param statusEnum
+	 */
+	void removeUserContact(String userId, String contactId, UserContactStatusEnum statusEnum);
 }

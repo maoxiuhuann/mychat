@@ -5,10 +5,12 @@ import com.ezchat.annotation.GlobalInterceptor;
 import com.ezchat.entity.dto.TokenUserInfoDTO;
 import com.ezchat.entity.dto.UserContactSearchResultDTO;
 import com.ezchat.entity.po.UserContact;
+import com.ezchat.entity.po.UserInfo;
 import com.ezchat.entity.query.UserContactApplyQuery;
 import com.ezchat.entity.query.UserContactQuery;
 import com.ezchat.entity.vo.PaginationResultVO;
 import com.ezchat.entity.vo.ResponseVo;
+import com.ezchat.entity.vo.UserInfoVo;
 import com.ezchat.enums.PageSize;
 import com.ezchat.enums.ResponseCodeEnum;
 import com.ezchat.enums.UserContactStatusEnum;
@@ -17,6 +19,8 @@ import com.ezchat.exception.BusinessException;
 import com.ezchat.service.UserContactApplyService;
 import com.ezchat.service.UserContactService;
 import com.ezchat.service.UserInfoService;
+import com.ezchat.utils.CopyUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -160,4 +164,79 @@ public class UserContactController extends ABaseController {
         //TODO 向对方发送申请对方没同意过就被被拉黑的，则对方不显示在自己的联系人列表中
         return getSuccessResponseVo(contactList);
     }
+
+    /**
+     * 加载联系人详情-1.将鼠标悬停在联系人头像上显示的详情2.在群组里查看群成员信息的接口
+     *
+     * @param request
+     * @param contactId
+     * @return
+     */
+    @RequestMapping("/getContactInfo")
+    @GlobalInterceptor
+    public ResponseVo getContactInfo(HttpServletRequest request, @NotNull String contactId) {
+        TokenUserInfoDTO tokenUserInfoDTO = getTokenUserInfo(request);
+        UserInfo userInfo = userInfoService.getUserInfoByUserId(contactId);
+        UserInfoVo userInfoVo = CopyUtils.copy(userInfo, UserInfoVo.class);
+        userInfoVo.setContactStatus(UserContactStatusEnum.NOT_FRIEND.getStatus());
+        UserContact userContact = userContactService.getUserContactByUserIdAndContactId(tokenUserInfoDTO.getUserId(), contactId);
+        if (null != userContact) {
+            userInfoVo.setContactStatus(UserContactStatusEnum.FRIEND.getStatus());
+        }
+        return getSuccessResponseVo(userInfoVo);
+    }
+
+    /**
+     * 加载联系人详情-在联系人列表点击联系人显示的详情
+     *
+     * @param request
+     * @param contactId
+     * @return
+     */
+    @RequestMapping("/getContactUserInfo")
+    @GlobalInterceptor
+    public ResponseVo getContactUserInfo(HttpServletRequest request, @NotNull String contactId) throws BusinessException {
+        TokenUserInfoDTO tokenUserInfoDTO = getTokenUserInfo(request);
+        UserInfo userInfo = userInfoService.getUserInfoByUserId(contactId);
+        UserInfoVo userInfoVo = CopyUtils.copy(userInfo, UserInfoVo.class);
+        UserContact userContact = userContactService.getUserContactByUserIdAndContactId(tokenUserInfoDTO.getUserId(), contactId);
+        if (null == userContact || !ArrayUtils.contains(new Integer[]{UserContactStatusEnum.FRIEND.getStatus(),
+                                                                        UserContactStatusEnum.BLACKLIST_BE.getStatus(),
+                                                                        UserContactStatusEnum.DEL_BE.getStatus()}, userContact.getStatus())) {
+            throw new BusinessException(ResponseCodeEnum.CODE_600);
+        }
+        return getSuccessResponseVo(userInfoVo);
+    }
+
+    /**
+     * 删除联系人
+     *
+     * @param request
+     * @param contactId
+     * @return
+     */
+    @RequestMapping("/delContact")
+    @GlobalInterceptor
+    public ResponseVo delContact(HttpServletRequest request, @NotNull String contactId) {
+        TokenUserInfoDTO tokenUserInfoDTO = getTokenUserInfo(request);
+        userContactService.removeUserContact(tokenUserInfoDTO.getUserId(), contactId, UserContactStatusEnum.DEL);
+        return getSuccessResponseVo(null);
+    }
+
+    /**
+     * 拉黑联系人
+     *
+     * @param request
+     * @param contactId
+     * @return
+     */
+    @RequestMapping("/addContact2BlackList")
+    @GlobalInterceptor
+    public ResponseVo addContact2BlackList(HttpServletRequest request, @NotNull String contactId) {
+        TokenUserInfoDTO tokenUserInfoDTO = getTokenUserInfo(request);
+        userContactService.removeUserContact(tokenUserInfoDTO.getUserId(), contactId, UserContactStatusEnum.BLACKLIST);
+        return getSuccessResponseVo(null);
+    }
+
+
 }
