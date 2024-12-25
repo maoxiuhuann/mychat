@@ -6,7 +6,9 @@ import com.ezchat.entity.po.UserInfo;
 import com.ezchat.entity.query.UserInfoQuery;
 import com.ezchat.entity.vo.UserInfoVo;
 import com.ezchat.exception.BusinessException;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -91,4 +93,13 @@ public interface UserInfoService {
 	 * @param password
 	 */
 	UserInfoVo login(String email, String password) throws BusinessException;
+
+	/**
+	 * 更新用户信息
+	 * @param userInfo
+	 * @param avatarFile
+	 * @param avatarCover
+	 */
+    void updateUserInfo(UserInfo userInfo, MultipartFile avatarFile, MultipartFile avatarCover) throws IOException;
+
 }

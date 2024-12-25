@@ -22,8 +22,11 @@ import jodd.util.ArraysUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
+import java.io.File;
+import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 
@@ -244,6 +247,38 @@ public class UserInfoServiceImpl implements UserInfoService {
             tokenUserInfoDTO.setAdmin(false);
         }
         return tokenUserInfoDTO;
+    }
+
+    /**
+     * 更新用户信息
+     *
+     * @param userInfo
+     * @param avatarFile
+     * @param avatarCover
+     * @throws IOException
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void updateUserInfo(UserInfo userInfo, MultipartFile avatarFile, MultipartFile avatarCover) throws IOException {
+        if (null != avatarFile) {
+            String baseFolder = appConfig.getProjectFolder() + Constans.FILE_FOLDER_FILE;
+            File targetFileFolder = new File(baseFolder + Constans.FILE_FOLDER_AVATAR_NAME);
+            if (!targetFileFolder.exists()) {
+                targetFileFolder.mkdirs();
+            }
+            String filePath = targetFileFolder.getPath() + "/" + userInfo.getUserId() + Constans.IMAGE_SUFFIX;
+            avatarFile.transferTo(new File(filePath));
+            avatarCover.transferTo(new File(filePath+Constans.COVER_IMAGE_SUFFIX));
+        }
+        //先查询，再更新，缩短事务提交时间
+        UserInfo dbInfo = userInfoMapper.selectByUserId(userInfo.getUserId());
+
+        userInfoMapper.updateByUserId(userInfo, userInfo.getUserId());
+        String contactNameUpdate = null;
+        if (dbInfo.getNickName().equals(userInfo.getNickName())){
+            contactNameUpdate = userInfo.getNickName();
+        }
+        //TODO 更新会很信息中的昵称信息
     }
 }
 
