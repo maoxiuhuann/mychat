@@ -1,10 +1,16 @@
 package com.ezchat.service.impl;
 
+import com.ezchat.entity.po.UserInfo;
 import com.ezchat.entity.query.SimplePage;
+import com.ezchat.entity.query.UserInfoQuery;
 import com.ezchat.entity.vo.PaginationResultVO;
 import com.ezchat.entity.po.UserInfoVip;
 import com.ezchat.entity.query.UserInfoVipQuery;
 import com.ezchat.enums.PageSize;
+import com.ezchat.enums.ResponseCodeEnum;
+import com.ezchat.enums.VipAccountStatusEnum;
+import com.ezchat.exception.BusinessException;
+import com.ezchat.mappers.UserInfoMapper;
 import com.ezchat.mappers.UserInfoVipMapper;
 import com.ezchat.service.UserInfoVipService;
 import org.springframework.stereotype.Service;
@@ -22,6 +28,9 @@ public class UserInfoVipServiceImpl implements UserInfoVipService {
 
 	@Resource
 	private UserInfoVipMapper<UserInfoVip, UserInfoVipQuery> userInfoVipMapper;
+
+	@Resource
+	private UserInfoMapper<UserInfo, UserInfoQuery> userInfoMapper;
 
 	/**
 	 * 根据条件查询列表
@@ -140,4 +149,59 @@ public class UserInfoVipServiceImpl implements UserInfoVipService {
 		return this.userInfoVipMapper.deleteByEmail(email);
 	}
 
+	/**
+	 * 保存靓号
+	 * @param userInfoVip
+	 */
+    @Override
+    public void savaAccount(UserInfoVip userInfoVip) throws BusinessException {
+		//禁止修改已使用的靓号信息
+		if (userInfoVip.getId() != null){
+			UserInfoVip dbInfo = userInfoVipMapper.selectById(userInfoVip.getId());
+			if (VipAccountStatusEnum.USED.getStatus().equals(dbInfo.getStatus())){
+				throw new BusinessException(ResponseCodeEnum.CODE_600);
+			}
+		}
+		UserInfoVip dbInfo;
+
+		//根据邮箱进行靓号操作
+		dbInfo = userInfoVipMapper.selectByEmail(userInfoVip.getEmail());
+		// 新增时判断邮箱是否存在-前端传来的userinfo包括id，前端传来的id为null，说明是新增，数据库中没有该邮箱的记录，则新增记录
+		if (userInfoVip.getId() == null && dbInfo != null){
+			throw new BusinessException("靓号邮箱已存在");
+		}
+		// 更新时判断邮箱是否存在-有这样一种情况：有两个靓号邮箱1和2，在数据库中的id分别为1、2，前端想要讲靓号1的邮箱改成2，此时就会进入这个if判断
+		if (userInfoVip.getId() != null && dbInfo != null && dbInfo.getId() != null && !userInfoVip.getId().equals(dbInfo.getId())){
+			throw new BusinessException("靓号邮箱已存在");
+		}
+
+		//根据邮箱进行靓号操作
+		dbInfo = userInfoVipMapper.selectByUserId(userInfoVip.getUserId());
+		// 新增时判断用户ID是否存在
+		if (userInfoVip.getId() == null && dbInfo != null){
+			throw new BusinessException("靓号已存在");
+		}
+		// 更新时判断用户ID是否存在
+		if (userInfoVip.getId() != null && dbInfo != null && dbInfo.getId() != null && !userInfoVip.getId().equals(dbInfo.getId())){
+			throw new BusinessException("靓号已存在");
+		}
+
+		//判断邮箱是否已经被注册
+		UserInfo userInfo = userInfoMapper.selectByEmail(userInfoVip.getEmail());
+		if (userInfo != null){
+			throw new BusinessException("靓号邮箱已被注册");
+		}
+		userInfo = userInfoMapper.selectByUserId(userInfoVip.getUserId());
+		//判断靓号是否已经被注册
+		if (userInfo != null){
+			throw new BusinessException("靓号已被注册");
+		}
+
+		if (userInfoVip.getId() != null){
+			userInfoVipMapper.updateById(userInfoVip, userInfoVip.getId());
+		}else {
+			userInfoVip.setStatus(VipAccountStatusEnum.NO_USE.getStatus());
+			userInfoVipMapper.insert(userInfoVip);
+		}
+    }
 }

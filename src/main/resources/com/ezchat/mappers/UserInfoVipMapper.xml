@@ -222,7 +222,7 @@
 		select <include refid="base_column_list"/> from user_info_vip where email=#{email}
 	</select>
 
-	<!--根据Email更新数据-->
+    <!--根据Email更新数据-->
 	<update id="updateByEmail" parameterType="com.ezchat.entity.po.UserInfoVip">
 		update user_info_vip
 		<set>
@@ -245,5 +245,35 @@
 	<!--根据Email删除数据-->
 	<delete id="deleteByEmail">
 		delete from user_info_vip where email=#{email}
+	</delete>
+
+	<!--根据Id查询数据-->
+	<select id="selectById" resultMap="base_result_map">
+		select <include refid="base_column_list"/> from user_info_vip where id=#{id}
+	</select>
+
+	<!--根据Id更新数据-->
+	<update id="updateById" parameterType="com.ezchat.entity.po.UserInfoVip">
+		update user_info_vip
+		<set>
+			<if test="bean.id != null">
+				id=#{bean.id},
+			</if>
+			<if test="bean.email != null">
+				email=#{bean.email},
+			</if>
+			<if test="bean.userId != null">
+				user_id=#{bean.userId},
+			</if>
+			<if test="bean.status != null">
+				status=#{bean.status},
+			</if>
+		</set>
+		where id=#{id}
+	</update>
+
+	<!--根据Id删除数据-->
+	<delete id="deleteById">
+		delete from user_info_vip where id=#{id}
 	</delete>
 </mapper>

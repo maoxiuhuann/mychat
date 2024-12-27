@@ -18,6 +18,7 @@ import com.ezchat.redis.RedisComponent;
 import com.ezchat.service.UserInfoService;
 import com.ezchat.utils.CopyUtils;
 import com.ezchat.utils.StringUtils;
+import com.sun.org.apache.bcel.internal.generic.IF_ACMPEQ;
 import jodd.util.ArraysUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -279,6 +280,33 @@ public class UserInfoServiceImpl implements UserInfoService {
             contactNameUpdate = userInfo.getNickName();
         }
         //TODO 更新会很信息中的昵称信息
+    }
+
+    /**
+     * 管理员更新用户状态
+     * @param status
+     * @param userId
+     */
+    @Override
+    public void updateUserStatus(Integer status, String userId) throws BusinessException {
+        UserStatusEnum userStatusEnum = UserStatusEnum.getByStatus(status);
+        if (userStatusEnum == null){
+            throw new BusinessException(ResponseCodeEnum.CODE_600);
+        }
+        UserInfo userInfo = new UserInfo();
+        userInfo.setStatus(status);
+        userInfoMapper.updateByUserId(userInfo, userId);
+    }
+
+    /**
+     * 管理员强制用户下线
+     * @param userId
+     * @return
+     * @throws BusinessException
+     */
+    @Override
+    public void forceOffLine(String userId) {
+        //TODO 强制下线，清除登录信息，清除缓存信息
     }
 }
 

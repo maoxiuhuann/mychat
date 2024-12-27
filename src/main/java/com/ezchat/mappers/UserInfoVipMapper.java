@@ -54,4 +54,8 @@ public interface UserInfoVipMapper<T, P> extends BaseMapper {
 	 * 根据Email删除数据
 	 */
 	Integer deleteByEmail(@Param("email") String email);
+
+    T selectById(Integer id);
+
+	void updateById(@Param("bean")T userInfoVip, Integer id);
 }

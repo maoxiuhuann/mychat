@@ -3,6 +3,7 @@ package com.ezchat.service;
 import com.ezchat.entity.vo.PaginationResultVO;
 import com.ezchat.entity.po.UserInfoVip;
 import com.ezchat.entity.query.UserInfoVipQuery;
+import com.ezchat.exception.BusinessException;
 
 import java.util.List;
 /**
@@ -87,4 +88,9 @@ public interface UserInfoVipService {
 	 */
 	Integer deleteUserInfoVipByEmail(String email);
 
+	/**
+	 * 保存靓号
+	 * @param userInfoVip
+	 */
+	void savaAccount(UserInfoVip userInfoVip) throws BusinessException;
 }

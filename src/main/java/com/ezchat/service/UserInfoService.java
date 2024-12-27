@@ -102,4 +102,17 @@ public interface UserInfoService {
 	 */
     void updateUserInfo(UserInfo userInfo, MultipartFile avatarFile, MultipartFile avatarCover) throws IOException;
 
+	/**
+	 * 管理员更新用户状态
+	 * @param status
+	 * @param userId
+	 */
+	void updateUserStatus(Integer status, String userId) throws BusinessException;
+
+	/**
+	 * 管理员强制用户下线
+	 * @param userId
+	 */
+	void forceOffLine(String userId);
+
 }
