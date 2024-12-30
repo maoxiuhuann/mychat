@@ -56,6 +56,16 @@ public class GroupInfoQuery extends BaseQuery {
 	 */
 	private Integer status;
 
+	/**
+	 * 是否查询群主名称
+	 */
+	private Boolean queryGroupOwnerName;
+
+	/**
+	 * queryMemberCount
+	 */
+	private Boolean queryMemberCount;
+
 	public void setGroupId(String groupId) {
 		this.groupId = groupId;
 	}
@@ -160,4 +170,19 @@ public class GroupInfoQuery extends BaseQuery {
 		return this.groupNoticeFuzzy;
 	}
 
+	public Boolean getQueryGroupOwnerName() {
+		return queryGroupOwnerName;
+	}
+
+	public void setQueryGroupOwnerName(Boolean queryGroupOwnerName) {
+		this.queryGroupOwnerName = queryGroupOwnerName;
+	}
+
+	public Boolean getQueryMemberCount() {
+		return queryMemberCount;
+	}
+
+	public void setQueryMemberCount(Boolean queryMemberCount) {
+		this.queryMemberCount = queryMemberCount;
+	}
 }

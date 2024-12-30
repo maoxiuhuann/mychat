@@ -89,8 +89,19 @@ public interface UserInfoVipService {
 	Integer deleteUserInfoVipByEmail(String email);
 
 	/**
+     * 根据ID删除数据
+     *
+     * @param id
+     * @return
+     */
+	Integer deleteUserInfoVipById(Integer id);
+
+	/**
 	 * 保存靓号
 	 * @param userInfoVip
 	 */
 	void savaAccount(UserInfoVip userInfoVip) throws BusinessException;
+
+
+
 }

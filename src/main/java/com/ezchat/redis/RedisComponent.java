@@ -44,4 +44,12 @@ public class RedisComponent {
         sysSettingDTO = sysSettingDTO == null ? new SysSettingDTO() : sysSettingDTO;
         return sysSettingDTO;
     }
+
+    /**
+     * 保存系统设置信息
+     * @param sysSettingDTO
+     */
+    public void saveSysSetting(SysSettingDTO sysSettingDTO) {
+        redisUtils.set(Constans.REDIS_KEY_SYS_SETTING, sysSettingDTO);
+    }
 }

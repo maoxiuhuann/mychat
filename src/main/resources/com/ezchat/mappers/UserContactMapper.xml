@@ -237,6 +237,38 @@
 		ON DUPLICATE KEY UPDATE user_id = VALUES(user_id),contact_id = VALUES(contact_id),contact_type = VALUES(contact_type),create_time = VALUES(create_time),status = VALUES(status),last_update_time = VALUES(last_update_time)
 	</insert>
 
+	<!--多条件修改-->
+	<update id="updateByParam" parameterType="com.ezchat.entity.query.UserContactQuery">
+		UPDATE user_contact c
+		<set>
+			<if test="bean.userId != null">
+				user_id=#{bean.userId},
+			</if>
+			<if test="bean.contactId != null">
+				c.contact_id=#{bean.contactId},
+			</if>
+			<if test="bean.contactType != null">
+				c.contact_type=#{bean.contactType},
+			</if>
+			<if test="bean.createTime != null">
+				create_time=#{bean.createTime},
+			</if>
+			<if test="bean.status != null">
+				status=#{bean.status},
+			</if>
+			<if test="bean.lastUpdateTime != null">
+				last_update_time=#{bean.lastUpdateTime},
+			</if>
+		</set>
+		<include refid="query_condition"/>
+	</update>
+
+	<!--多条件删除-->
+	<delete id="deleteByParam">
+		DELETE FROM user_contact
+		<include refid="query_condition"/>
+	</delete>
+
 	<!--根据UserIdAndContactId查询数据-->
 	<select id="selectByUserIdAndContactId" resultMap="base_result_map">
 		select <include refid="base_column_list"/> from user_contact where user_id=#{userId} and contact_id=#{contactId}

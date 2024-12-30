@@ -69,4 +69,11 @@ public interface GroupInfoService {
      */
     void saveGroup(GroupInfo groupInfo, MultipartFile avatarFile, MultipartFile avatarCover) throws IOException, BusinessException;
 
+    /**
+     * 解散群组
+     * @param groupOwnerId
+     * @param groupId
+     */
+    void dissolutionGroup(String groupOwnerId,String groupId) throws BusinessException;
+
 }

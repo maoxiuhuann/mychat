@@ -150,6 +150,15 @@ public class UserInfoVipServiceImpl implements UserInfoVipService {
 	}
 
 	/**
+	 * 根据Id删除数据
+	 * @param id
+	 * @return
+	 */
+	public Integer deleteUserInfoVipById(Integer id) {
+		return this.userInfoVipMapper.deleteById(id);
+	}
+
+	/**
 	 * 保存靓号
 	 * @param userInfoVip
 	 */

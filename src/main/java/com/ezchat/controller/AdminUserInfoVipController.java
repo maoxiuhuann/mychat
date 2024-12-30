@@ -48,4 +48,17 @@ public class AdminUserInfoVipController extends ABaseController{
         userInfoVipService.savaAccount(userInfoVip);
         return getSuccessResponseVo(null);
     }
+
+    /**
+     *  删除靓号
+     * @param id
+     * @return
+     * @throws BusinessException
+     */
+    @RequestMapping("/delBeautAccount")
+    @GlobalInterceptor(checkAdmin = true)
+    public ResponseVo delBeautAccount(@NotNull Integer id) throws BusinessException {
+        userInfoVipService.deleteUserInfoVipById(id);
+        return getSuccessResponseVo(null);
+    }
 }

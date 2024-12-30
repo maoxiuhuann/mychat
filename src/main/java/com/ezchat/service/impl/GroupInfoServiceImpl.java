@@ -6,19 +6,18 @@ import com.ezchat.entity.dto.SysSettingDTO;
 import com.ezchat.entity.po.UserContact;
 import com.ezchat.entity.query.SimplePage;
 import com.ezchat.entity.query.UserContactQuery;
+import com.ezchat.entity.query.UserInfoQuery;
 import com.ezchat.entity.vo.PaginationResultVO;
 import com.ezchat.entity.po.GroupInfo;
 import com.ezchat.entity.query.GroupInfoQuery;
-import com.ezchat.enums.PageSize;
-import com.ezchat.enums.ResponseCodeEnum;
-import com.ezchat.enums.UserContactStatusEnum;
-import com.ezchat.enums.UserContactTypeEnum;
+import com.ezchat.enums.*;
 import com.ezchat.exception.BusinessException;
 import com.ezchat.mappers.GroupInfoMapper;
 import com.ezchat.mappers.UserContactMapper;
 import com.ezchat.redis.RedisComponent;
 import com.ezchat.service.GroupInfoService;
 import com.ezchat.utils.StringUtils;
+import com.sun.org.apache.bcel.internal.generic.IF_ACMPEQ;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -195,5 +194,38 @@ public class GroupInfoServiceImpl implements GroupInfoService {
 
         avatarFile.transferTo(new File(filePath));
         avatarCover.transferTo(new File(filePath + Constans.COVER_IMAGE_SUFFIX));
+    }
+
+    /**
+     * 解散群组
+     * @param groupOwnerId
+     * @param groupId
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void dissolutionGroup(String groupOwnerId, String groupId) throws BusinessException {
+        GroupInfo dbInfo = groupInfoMapper.selectByGroupId(groupId);
+        //判断是否为群主-非群主无法解散群组
+        if (null == dbInfo || !dbInfo.getGroupOwnerId().equals(groupOwnerId)){
+            throw new BusinessException(ResponseCodeEnum.CODE_600);
+        }
+        //删除群组
+        GroupInfo updateInfo = new GroupInfo();
+        updateInfo.setStatus(GroupStatusEnum.DISSOLUTION.status);
+        groupInfoMapper.updateByGroupId(updateInfo, groupId);
+        //删除群组联系人
+        UserContactQuery userContactQuery = new UserContactQuery();
+        //条件
+        userContactQuery.setContactId(groupId);
+        userContactQuery.setContactType(UserContactTypeEnum.GROUP.getType());
+        //更新信息
+        UserContact updateUserContact = new UserContact();
+        updateUserContact.setStatus(UserContactStatusEnum.DEL.getStatus());
+
+        userContactMapper.updateByParam(updateUserContact, userContactQuery);
+
+        //TODO 移除相关群程序的联系人缓存
+
+        //TODO 1.更新会话信息 2.记录群消息 3.发送解散通知消息
     }
 }
