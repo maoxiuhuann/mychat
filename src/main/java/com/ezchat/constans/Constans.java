@@ -29,13 +29,18 @@ public class Constans {
     public static final String ROBOT_UID = UserContactTypeEnum.USER.getPrefix() + "ROBOT";
 
     //文件上传的存放位置常亮
-    public static final String FILE_FOLDER_FILE = "/file/";
+    public static final String FILE_FOLDER_FILE = "file/";
 
     public static final String FILE_FOLDER_AVATAR_NAME = "avatar/";
 
     public static final String IMAGE_SUFFIX = ".png";
 
     public static final String COVER_IMAGE_SUFFIX = "_cover.png";
+
+    //APP文件目录
+    public static final String APP_UPDATE_FOLDER = "app/";
+
+    public static final String APP_EXE_SUFFIX = ".exe";
 
     //默认申请理由
     public static final String DEFAULT_APPLY_REASON = "我是%s";
