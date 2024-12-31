@@ -13,10 +13,12 @@ import com.ezchat.enums.ResponseCodeEnum;
 import com.ezchat.exception.BusinessException;
 import com.ezchat.mappers.AppUpdateMapper;
 import com.ezchat.service.AppUpdateService;
+import com.ezchat.utils.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Date;
@@ -25,7 +27,7 @@ import java.util.List;
 /**
  * @Description:app发布Service
  * @author:xiuyuan
- * @date:2024/12/30
+ * @date:2024/12/31
  */
 @Service("appUpdateService")
 public class AppUpdateServiceImpl implements AppUpdateService {
@@ -107,8 +109,33 @@ public class AppUpdateServiceImpl implements AppUpdateService {
     /**
      * 根据Id删除数据
      */
-    public Integer deleteAppUpdateById(Integer id) {
+    public Integer deleteAppUpdateById(Integer id) throws BusinessException {
+        AppUpdate dbInfo = this.appUpdateMapper.selectById(id);
+        if (dbInfo.getStatus() != AppUpdateStatusEnum.INIT.getStatus()){
+            throw new BusinessException("不能删除已发布的更新信息");
+        }
         return this.appUpdateMapper.deleteById(id);
+    }
+
+    /**
+     * 根据Version查询数据
+     */
+    public AppUpdate getAppUpdateByVersion(String version) {
+        return this.appUpdateMapper.selectByVersion(version);
+    }
+
+    /**
+     * 根据Version更新数据
+     */
+    public Integer updateAppUpdateByVersion(AppUpdate bean, String version) {
+        return this.appUpdateMapper.updateByVersion(bean, version);
+    }
+
+    /**
+     * 根据Version删除数据
+     */
+    public Integer deleteAppUpdateByVersion(String version) {
+        return this.appUpdateMapper.deleteByVersion(version);
     }
 
     /**
@@ -120,42 +147,79 @@ public class AppUpdateServiceImpl implements AppUpdateService {
     @Override
     public void saveAppUpdate(AppUpdate appUpdate, MultipartFile file) throws BusinessException, IOException {
         AppUpdateFileTypeEnum fileTypeEnum = AppUpdateFileTypeEnum.getByType(appUpdate.getFileType());
+        AppUpdateStatusEnum statusEnum = AppUpdateStatusEnum.getByStatus(appUpdate.getStatus());
         if (null == fileTypeEnum) {
             throw new BusinessException(ResponseCodeEnum.CODE_600);
         }
 
+        if (appUpdate.getId() != null){
+            AppUpdate dbInfo = appUpdateMapper.selectById(appUpdate.getId());
+            if (!AppUpdateStatusEnum.INIT.getStatus().equals(dbInfo.getStatus())){
+                throw new BusinessException("不能修改已发布的更新信息");
+            }
+        }
         AppUpdateQuery query = new AppUpdateQuery();
-        query.setOrderBy("version desc");
+        query.setOrderBy("id desc");
         query.setSimplePage(new SimplePage(0, 1));
         List<AppUpdate> list = appUpdateMapper.selectList(query);
         if (!list.isEmpty()) {
             AppUpdate lastAppUpdate = list.get(0);
             Long dbVersion = Long.parseLong(lastAppUpdate.getVersion().replace(".", ""));
             Long currentVersion = Long.parseLong(appUpdate.getVersion().replace(".", ""));
-			//新增条件限制
-            if (appUpdate.getId() == null && currentVersion <= dbVersion){
-				throw new BusinessException("当前版本号必须大于历史版本号");
-			}
-			//更新条件限制
-			if (appUpdate.getId() != null && currentVersion <= dbVersion && !appUpdate.getVersion().equals(lastAppUpdate.getVersion())){
-				throw new BusinessException("当前版本号必须大于历史版本号");
-			}
+            //新增条件限制
+            if (appUpdate.getId() == null && currentVersion <= dbVersion) {
+                throw new BusinessException("当前版本号必须大于历史版本号");
+            }
+            //更新条件限制
+            if (appUpdate.getId() != null && currentVersion <= dbVersion && appUpdate.getId().equals(lastAppUpdate.getId())) {
+                throw new BusinessException("当前版本号必须大于历史版本号");
+            }
+            AppUpdate versionDb = appUpdateMapper.selectByVersion(appUpdate.getVersion());
+			//不能更新两条相同版本号记录
+            if (appUpdate.getId() != null && versionDb != null && !versionDb.getId().equals(appUpdate.getId())) {
+				throw new BusinessException("当前版本号已存在");
+            }
         }
-        if (appUpdate.getId() == null){
+        if (appUpdate.getId() == null) {
             appUpdate.setCreateTime(new Date());
             appUpdate.setStatus(AppUpdateStatusEnum.INIT.getStatus());
             appUpdateMapper.insert(appUpdate);
-        }else {
+        } else {
             appUpdate.setStatus(null);
             appUpdate.setGrayscaleUid(null);
             appUpdateMapper.updateById(appUpdate, appUpdate.getId());
         }
-        if (file != null){
+        if (file != null) {
             File folder = new File(appConfig.getProjectFolder() + Constans.APP_UPDATE_FOLDER);
-            if (!folder.exists()){
+            if (!folder.exists()) {
                 folder.mkdirs();
             }
             file.transferTo(new File(folder.getAbsolutePath() + "/" + appUpdate.getId() + Constans.APP_EXE_SUFFIX));
         }
+    }
+
+    /**
+     * 发布app更新
+     * @param id
+     * @param status
+     * @param grayscaleUid
+     * @throws BusinessException
+     */
+    @Override
+    public void postAppUpdate(Integer id, Integer status, String grayscaleUid) throws BusinessException {
+        AppUpdateStatusEnum statusEnum = AppUpdateStatusEnum.getByStatus(status);
+        if (null == statusEnum) {
+            throw new BusinessException(ResponseCodeEnum.CODE_600);
+        }
+        if (statusEnum == AppUpdateStatusEnum.GRAYSCALE && StringUtils.isEmpty(grayscaleUid)) {
+            throw new BusinessException("灰度发布UID不能为空");
+        }
+        if (AppUpdateStatusEnum.GRAYSCALE != statusEnum){
+            grayscaleUid = "";
+        }
+        AppUpdate appUpdate = new AppUpdate();
+        appUpdate.setStatus(status);
+        appUpdate.setGrayscaleUid(grayscaleUid);
+        appUpdateMapper.updateById(appUpdate, id);
     }
 }

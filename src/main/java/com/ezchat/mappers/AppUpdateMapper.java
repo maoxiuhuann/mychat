@@ -5,7 +5,7 @@ import org.apache.ibatis.annotations.Param;
 /**
  * @Description:app发布Mapper
  * @author:xiuyuan
- * @date:2024/12/30
+ * @date:2024/12/31
  */
 public interface AppUpdateMapper<T, P> extends BaseMapper {
 	/**
@@ -22,6 +22,23 @@ public interface AppUpdateMapper<T, P> extends BaseMapper {
 	 * 根据Id删除数据
 	 */
 	Integer deleteById(@Param("id") Integer id);
+
+	/**
+	 * 根据Version查询数据
+	 */
+	T selectByVersion(@Param("version") String version);
+
+	/**
+	 * 根据Version更新数据
+	 */
+	Integer updateByVersion(@Param("bean") T t, @Param("version") String version);
+
+	/**
+	 * 根据Version删除数据
+	 */
+	Integer deleteByVersion(@Param("version") String version);
+
+
 
 	/**
 	 * 根据限定条件query更新数据

@@ -13,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 import java.io.IOException;
 
 @RequestMapping("/admin")
@@ -57,6 +58,33 @@ public class AdminAppUpdateController extends ABaseController{
         appUpdate.setFileType(fileType);
         appUpdate.setOuterLink(outerLink);
         appUpdateService.saveAppUpdate(appUpdate, file);
+        return getSuccessResponseVo(null);
+    }
+
+    /**
+     * 删除app更新信息
+     * @param id
+     * @return
+     */
+    @RequestMapping("/delUpdate")
+    @GlobalInterceptor(checkAdmin = true)
+    public ResponseVo delUpdate(@NotNull Integer id) throws BusinessException {
+        appUpdateService.deleteAppUpdateById(id);
+        return getSuccessResponseVo(null);
+    }
+
+    /**
+     * 发布app更新
+     * @param id
+     * @param status
+     * @param grayscaleUid
+     * @return
+     * @throws BusinessException
+     */
+    @RequestMapping("/postUpdate")
+    @GlobalInterceptor(checkAdmin = true)
+    public ResponseVo postUpdate(@NotNull Integer id,@NotNull Integer status,String grayscaleUid) throws BusinessException {
+        appUpdateService.postAppUpdate(id,status,grayscaleUid);
         return getSuccessResponseVo(null);
     }
 }

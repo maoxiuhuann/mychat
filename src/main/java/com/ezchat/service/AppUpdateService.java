@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * @Description:app发布Service
  * @author:xiuyuan
- * @date:2024/12/30
+ * @date:2024/12/31
  */
 public interface AppUpdateService {
 
@@ -58,7 +58,22 @@ public interface AppUpdateService {
 	/**
 	 * 根据Id删除数据
 	 */
-	Integer deleteAppUpdateById(Integer id);
+	Integer deleteAppUpdateById(Integer id) throws BusinessException;
+
+	/**
+	 * 根据Version查询数据
+	 */
+	AppUpdate getAppUpdateByVersion(String version);
+
+	/**
+	 * 根据Version更新数据
+	 */
+	Integer updateAppUpdateByVersion(AppUpdate bean, String version);
+
+	/**
+	 * 根据Version删除数据
+	 */
+	Integer deleteAppUpdateByVersion(String version);
 
 	/**
 	 * 保存app更新信息
@@ -66,4 +81,12 @@ public interface AppUpdateService {
 	 * @param file
 	 */
 	void saveAppUpdate(AppUpdate appUpdate, MultipartFile file) throws BusinessException, IOException;
+
+	/**
+	 * 发布app更新
+	 * @param id
+	 * @param status
+	 * @param grayscaleUid
+	 */
+	void postAppUpdate(Integer id,Integer status,String grayscaleUid) throws BusinessException;
 }
