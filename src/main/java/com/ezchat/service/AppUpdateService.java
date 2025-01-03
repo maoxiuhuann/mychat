@@ -89,4 +89,12 @@ public interface AppUpdateService {
 	 * @param grayscaleUid
 	 */
 	void postAppUpdate(Integer id,Integer status,String grayscaleUid) throws BusinessException;
+
+	/**
+	 * 获取最新版本
+	 * @param appVersion
+	 * @param uid
+	 * @return
+	 */
+	AppUpdate getLatestUpdate(String appVersion,String uid);
 }

@@ -338,6 +338,7 @@
 		select <include refid="base_column_list"/> from app_update where version=#{version}
 	</select>
 
+
 	<!--根据Version更新数据-->
 	<update id="updateByVersion" parameterType="com.ezchat.entity.po.AppUpdate">
 		update app_update
@@ -374,4 +375,11 @@
 	<delete id="deleteByVersion">
 		delete from app_update where version=#{version}
 	</delete>
+
+	<select id="selectLatestUpdate" resultMap="base_result_map">
+		select <include refid="base_column_list"/>
+		from app_update
+		where version > #{version} and (status = 2 or (status = 1 and find_in_set(#{uid},grayscale_uid)))
+		order by id desc limit 0,1
+	</select>
 </mapper>

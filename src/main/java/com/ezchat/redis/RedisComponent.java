@@ -3,6 +3,7 @@ package com.ezchat.redis;
 import com.ezchat.constans.Constans;
 import com.ezchat.entity.dto.SysSettingDTO;
 import com.ezchat.entity.dto.TokenUserInfoDTO;
+import jdk.nashorn.internal.parser.Token;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -32,7 +33,7 @@ public class RedisComponent {
         //可以通过token获取tokenUserInfoDTO
         redisUtils.setex(Constans.REDIS_KEY_WS_TOKEN + tokenUserInfoDTO.getToken(), tokenUserInfoDTO, Constans.REDIS_TIME_1DAY);
         //可以通过userid获取token
-        redisUtils.setex(Constans.REDIS_KEY_WS_TOKEN_USERID + tokenUserInfoDTO.getToken(), tokenUserInfoDTO.getToken(), Constans.REDIS_TIME_1DAY);
+        redisUtils.setex(Constans.REDIS_KEY_WS_TOKEN_USERID + tokenUserInfoDTO.getUserId(), tokenUserInfoDTO.getToken(), Constans.REDIS_TIME_1DAY);
     }
 
     /**
@@ -51,5 +52,15 @@ public class RedisComponent {
      */
     public void saveSysSetting(SysSettingDTO sysSettingDTO) {
         redisUtils.set(Constans.REDIS_KEY_SYS_SETTING, sysSettingDTO);
+    }
+
+    /**
+     * 获取token对应的用户信息
+     * @param token
+     * @return
+     */
+    public TokenUserInfoDTO getTokenUserInfoDTO(String token) {
+        TokenUserInfoDTO tokenUserInfoDTO = (TokenUserInfoDTO) redisUtils.get(Constans.REDIS_KEY_WS_TOKEN + token);
+        return tokenUserInfoDTO;
     }
 }

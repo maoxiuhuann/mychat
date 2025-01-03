@@ -42,6 +42,9 @@ public class Constans {
 
     public static final String APP_EXE_SUFFIX = ".exe";
 
+    //APP更新文件名
+    public static final String APP_NAME = "EzchatSetup";
+
     //默认申请理由
     public static final String DEFAULT_APPLY_REASON = "我是%s";
 

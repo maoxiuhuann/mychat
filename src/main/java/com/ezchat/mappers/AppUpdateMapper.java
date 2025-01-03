@@ -1,5 +1,6 @@
 package com.ezchat.mappers;
 
+import com.ezchat.entity.po.AppUpdate;
 import org.apache.ibatis.annotations.Param;
 
 /**
@@ -49,4 +50,6 @@ public interface AppUpdateMapper<T, P> extends BaseMapper {
 	 * 根据限定条件query删除数据
 	 */
 	Integer deleteByQuery(@Param("bean")T t, @Param("query") P p);
+
+	T selectLatestUpdate(@Param("version")String appVersion, @Param("uid") String uid);
 }

@@ -151,7 +151,6 @@ public class AppUpdateServiceImpl implements AppUpdateService {
         if (null == fileTypeEnum) {
             throw new BusinessException(ResponseCodeEnum.CODE_600);
         }
-
         if (appUpdate.getId() != null){
             AppUpdate dbInfo = appUpdateMapper.selectById(appUpdate.getId());
             if (!AppUpdateStatusEnum.INIT.getStatus().equals(dbInfo.getStatus())){
@@ -164,6 +163,7 @@ public class AppUpdateServiceImpl implements AppUpdateService {
         List<AppUpdate> list = appUpdateMapper.selectList(query);
         if (!list.isEmpty()) {
             AppUpdate lastAppUpdate = list.get(0);
+            //版本号比较
             Long dbVersion = Long.parseLong(lastAppUpdate.getVersion().replace(".", ""));
             Long currentVersion = Long.parseLong(appUpdate.getVersion().replace(".", ""));
             //新增条件限制
@@ -221,5 +221,16 @@ public class AppUpdateServiceImpl implements AppUpdateService {
         appUpdate.setStatus(status);
         appUpdate.setGrayscaleUid(grayscaleUid);
         appUpdateMapper.updateById(appUpdate, id);
+    }
+
+    /**
+     * 获取最新更新
+     * @param appVersion
+     * @param uid
+     * @return
+     */
+    @Override
+    public AppUpdate getLatestUpdate(String appVersion, String uid) {
+        return appUpdateMapper.selectLatestUpdate(appVersion, uid);
     }
 }
