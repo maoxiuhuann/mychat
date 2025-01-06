@@ -8,6 +8,10 @@ public class Constans {
 
     public static final Integer REDIS_TIME_1DAY = 60 * 60 * 24;
 
+    public static final Integer REDIS_KEY_EXPIRES_HEART_BEAT = 6;
+
+    public static final Integer REDIS_KEY_EXPIRES_2_DAY = REDIS_TIME_1DAY * 2;
+
     public static final Integer LENGTH_11 = 11;
 
     public static final Integer LENGTH_20 = 20;
@@ -25,6 +29,9 @@ public class Constans {
 
     //存系统设置的key
     public static final String REDIS_KEY_SYS_SETTING = "ezchat:syssetting";
+
+    //存用户联系人的key
+    public static final String REDIS_KEY_USER_CONTACT = "ezchat:ws:user:contact";
 
     public static final String ROBOT_UID = UserContactTypeEnum.USER.getPrefix() + "ROBOT";
 
@@ -50,4 +57,7 @@ public class Constans {
 
     //密码正则表达式-由字母、数字、特殊字符，任意2种组成，1-9位
     public static final String REGEX_PASSWORD = "^(?![a-zA-Z]+$)(?!\\d+$)(?![^\\da-zA-Z\\s]+$).{1,9}$";
+
+    //历史消息-三天前
+    public static final Long MILLIS_SECONDS_MESSAGE_EXPIRE = 3 * 24 * 60 * 60 * 1000L;
 }

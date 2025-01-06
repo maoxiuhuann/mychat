@@ -3,8 +3,10 @@ package com.ezchat.service.impl;
 import com.ezchat.constans.Constans;
 import com.ezchat.entity.config.AppConfig;
 import com.ezchat.entity.dto.TokenUserInfoDTO;
+import com.ezchat.entity.po.UserContact;
 import com.ezchat.entity.po.UserInfoVip;
 import com.ezchat.entity.query.SimplePage;
+import com.ezchat.entity.query.UserContactQuery;
 import com.ezchat.entity.query.UserInfoVipQuery;
 import com.ezchat.entity.vo.PaginationResultVO;
 import com.ezchat.entity.po.UserInfo;
@@ -12,6 +14,7 @@ import com.ezchat.entity.query.UserInfoQuery;
 import com.ezchat.entity.vo.UserInfoVo;
 import com.ezchat.enums.*;
 import com.ezchat.exception.BusinessException;
+import com.ezchat.mappers.UserContactMapper;
 import com.ezchat.mappers.UserInfoMapper;
 import com.ezchat.mappers.UserInfoVipMapper;
 import com.ezchat.redis.RedisComponent;
@@ -30,6 +33,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @Description:用户信息Service
@@ -50,6 +54,9 @@ public class UserInfoServiceImpl implements UserInfoService {
 
     @Autowired
     public RedisComponent redisComponent;
+
+    @Autowired
+    private UserContactMapper userContactMapper;
 
 
     /**
@@ -202,7 +209,7 @@ public class UserInfoServiceImpl implements UserInfoService {
      */
     @Override
     public UserInfoVo login(String email, String password) throws BusinessException {
-
+        //todo 登录的心跳是否是netty心跳？登录后不发送消息难道就相当于不在线？如何改进？
         UserInfo userInfo = this.userInfoMapper.selectByEmail(email);
         //用户心跳判断用户是否在其他地方登录
         Long lastHeartBeat = redisComponent.getUserHeartBeat(userInfo.getUserId());
@@ -216,8 +223,17 @@ public class UserInfoServiceImpl implements UserInfoService {
         if (null != lastHeartBeat) {
             throw new BusinessException("账号已在其他地方登录");
         }
-        //TODO 查询我的群组
-        // TODO 查询我的联系人
+        //查询联系人
+        UserContactQuery userContactQuery = new UserContactQuery();
+        userContactQuery.setUserId(userInfo.getUserId());
+        userContactQuery.setStatus(UserContactStatusEnum.FRIEND.getStatus());
+        List<UserContact> contactList = userContactMapper.selectList(userContactQuery);
+        //将联系人id存入redis
+        List<String> contactIds =  contactList.stream().map(item -> item.getContactId()).collect(Collectors.toList());
+        redisComponent.cleanUserContact(userInfo.getUserId());
+        if (!contactIds.isEmpty()){
+            redisComponent.addUserContactBatch(userInfo.getUserId(), contactIds);
+        }
         TokenUserInfoDTO tokenUserInfoDTO = getTokenUserInfoDTO(userInfo);
         //保存登录信息tokenUserInfoDTO到redis
         String token = StringUtils.encodeMd5(tokenUserInfoDTO.getUserId() + StringUtils.getRandomString(Constans.LENGTH_20));

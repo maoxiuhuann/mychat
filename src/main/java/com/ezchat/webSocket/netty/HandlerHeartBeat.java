@@ -1,9 +1,12 @@
 package com.ezchat.webSocket.netty;
 
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
+import io.netty.util.Attribute;
+import io.netty.util.AttributeKey;
 import org.slf4j.LoggerFactory;
 
 import org.slf4j.Logger;
@@ -27,11 +30,13 @@ public class HandlerHeartBeat extends ChannelDuplexHandler {
             IdleStateEvent event = (IdleStateEvent) evt;
             // 判断是否是读超时事件（READER_IDLE）。
             if (event.state() == IdleState.READER_IDLE){
-                logger.info("心跳超时，关闭连接");
+                Channel channel = ctx.channel();
+                Attribute<String> attribute = channel.attr(AttributeKey.valueOf(channel.id().toString()));
+                String userId = attribute.get();
+                logger.info("用户{}心跳超时，关闭连接", userId);
                 ctx.close();
-                // 判断是否是写超时事件（WRITER_IDLE）。
             }else if (event.state() == IdleState.WRITER_IDLE){
-                // 向客户端发送心跳包。
+                // 写超时，发送心跳包
                 ctx.writeAndFlush("heartbeat");
             }
         }

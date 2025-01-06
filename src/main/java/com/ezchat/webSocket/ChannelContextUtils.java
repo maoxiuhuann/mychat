@@ -1,0 +1,159 @@
+package com.ezchat.webSocket;
+
+import com.ezchat.constans.Constans;
+import com.ezchat.entity.dto.WsInitData;
+import com.ezchat.entity.po.ChatSessionUser;
+import com.ezchat.entity.po.UserInfo;
+import com.ezchat.entity.query.ChatSessionQuery;
+import com.ezchat.entity.query.ChatSessionUserQuery;
+import com.ezchat.entity.query.UserInfoQuery;
+import com.ezchat.entity.vo.PaginationResultVO;
+import com.ezchat.enums.UserContactTypeEnum;
+import com.ezchat.mappers.UserInfoMapper;
+import com.ezchat.redis.RedisComponent;
+import com.ezchat.service.ChatSessionUserService;
+import com.ezchat.utils.StringUtils;
+import io.netty.channel.Channel;
+import io.netty.channel.group.ChannelGroup;
+import io.netty.channel.group.DefaultChannelGroup;
+import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
+import io.netty.util.Attribute;
+import io.netty.util.AttributeKey;
+import io.netty.util.concurrent.GlobalEventExecutor;
+import org.springframework.stereotype.Component;
+
+import javax.annotation.Resource;
+import java.util.Date;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+
+@Component
+public class ChannelContextUtils {
+
+    // 用户与 Channel 绑定的存储
+    private static final ConcurrentHashMap<String, Channel> USER_CONTEXT_MAP = new ConcurrentHashMap<>();
+
+    // 群组与 ChannelGroup 的存储
+    private static final ConcurrentHashMap<String, ChannelGroup> GROUP_CONCURRENT_MAP = new ConcurrentHashMap<>();
+
+    @Resource
+    private RedisComponent redisComponent;
+
+    @Resource
+    private UserInfoMapper<UserInfo, UserInfoQuery> userInfoMapper;
+
+    @Resource
+    private ChatSessionUserService chatSessionUserService;
+
+    /**
+     * 将用户的上下文信息绑定到 Channel，并加入到指定的群组。
+     *
+     * @param userId  用户的唯一标识符
+     * @param channel 用户对应的 Netty Channel
+     *                <p>
+     *                1. 通过 AttributeKey 将 userId 绑定到当前 Channel。
+     *                2. 将 userId 和 Channel 存储到 USER_CONTEXT_MAP，用于快速查找。
+     *                3. 更新用户心跳信息到 Redis，表示用户在线状态。
+     *                4. 将 Channel 加入到默认群组（groupId = "1000"）中，便于群聊管理。
+     */
+    public void addContext(String userId, Channel channel) {
+        String channelId = channel.id().toString();
+
+        // 创建或获取 AttributeKey，绑定用户 ID
+        AttributeKey attributeKey = null;
+        if (!AttributeKey.exists(channelId)) {
+            attributeKey = AttributeKey.newInstance(channelId);
+        } else {
+            attributeKey = AttributeKey.valueOf(channelId);
+        }
+        channel.attr(attributeKey).set(userId);
+
+        // 将用户channel加入联系人列表中的群组
+        List<String> contactIdList = redisComponent.getUserContactList(userId);
+        for (String groupId : contactIdList) {
+            if (groupId.startsWith(UserContactTypeEnum.GROUP.getPrefix())) {
+                add2Group(groupId, channel);
+            }
+        }
+
+        // 将用户 ID 和对应的 Channel 存储到 Map
+        USER_CONTEXT_MAP.put(userId, channel);
+        // 绑定用户ID和channel后立刻更新用户心跳
+        redisComponent.saveUserHeartBeat(userId);
+
+        //更新用户最后连接时间
+        UserInfo updateInfo = new UserInfo();
+        updateInfo.setLastLoginTime(new Date());
+        userInfoMapper.updateByUserId(updateInfo,userId);
+
+        //历史消息推送-最近三天
+        UserInfo userInfo = userInfoMapper.selectByUserId(userId);
+        Long dblastLogOffTime = userInfo.getLastOffTime();
+        Long lastLogOffTime = dblastLogOffTime;
+        if (dblastLogOffTime != null && System.currentTimeMillis() - Constans.MILLIS_SECONDS_MESSAGE_EXPIRE > dblastLogOffTime){
+            lastLogOffTime = System.currentTimeMillis() - Constans.MILLIS_SECONDS_MESSAGE_EXPIRE;
+        }
+        /**
+         * 1.查询会话信息，查询用户所有的会话信息，保证换设备也能够同步会话
+         */
+        ChatSessionUserQuery sessionUserQuery = new ChatSessionUserQuery();
+        sessionUserQuery.setUserId(userId);
+        sessionUserQuery.setOrderBy("last_receive_time desc");
+        List<ChatSessionUser> chatSessionUserList = chatSessionUserService.findListByParam(sessionUserQuery);
+
+        WsInitData wsInitData = new WsInitData();
+        wsInitData.setChatSessionUserList(chatSessionUserList);
+
+        /**
+         * 2. 查询聊天消息
+         */
+
+        /**
+         * 3.查询好友申请数量
+         */
+    }
+
+    public static void sendMsg(){
+
+    }
+
+    /**
+     * 将指定的 Channel 加入到指定的 ChannelGroup 中。
+     *
+     * @param groupId 群组的唯一标识符
+     * @param channel 要加入群组的 Channel
+     *                <p>
+     *                1. 如果 groupId 对应的 ChannelGroup 不存在，则创建一个新的 ChannelGroup 并存入 GROUP_CONCURRENT_MAP。
+     *                2. 检查传入的 Channel 是否为 null，如果为 null 则直接返回。
+     *                3. 将 Channel 添加到对应的 ChannelGroup 中。
+     */
+    private void add2Group(String groupId, Channel channel) {
+        ChannelGroup group = GROUP_CONCURRENT_MAP.get(groupId);
+        if (group == null) {
+            group = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
+            GROUP_CONCURRENT_MAP.put(groupId, group);
+        }
+        if (channel == null) {
+            return;
+        }
+        group.add(channel);
+    }
+
+    /**
+     * 用户离线时，从 ChannelGroup 中移除用户对应的 Channel，更新最后下线时间
+     * @param channel
+     */
+    public void removeContext(Channel channel){
+
+        Attribute<String> attribute = channel.attr(AttributeKey.valueOf(channel.id().toString()));
+        String userId = attribute.get();
+        if (!StringUtils.isEmpty(userId)){
+            USER_CONTEXT_MAP.remove(userId);
+        }
+        redisComponent.removeUserHeartBeat(userId);
+        //更新用户最后下线时间
+        UserInfo userInfo = new UserInfo();
+        userInfo.setLastOffTime(System.currentTimeMillis());
+        userInfoMapper.updateByUserId(userInfo,userId);
+    }
+}
