@@ -1,6 +1,6 @@
 package com.ezchat.enums;
 
-import com.ezchat.utils.StringUtils;
+import com.ezchat.utils.StringTools;
 
 public enum JoinTypeEnum {
     JOIN(0, "直接加入"),
@@ -24,7 +24,7 @@ public enum JoinTypeEnum {
 
     public static JoinTypeEnum getByName(String name) {
         try {
-            if (StringUtils.isEmpty(name)) {
+            if (StringTools.isEmpty(name)) {
                 return null;
             }
             return JoinTypeEnum.valueOf(name.toUpperCase());

@@ -1,27 +1,17 @@
 package com.ezchat.controller;
 
 import com.ezchat.annotation.GlobalInterceptor;
-import com.ezchat.constans.Constans;
-import com.ezchat.entity.dto.TokenUserInfoDTO;
-import com.ezchat.entity.po.UserInfo;
 import com.ezchat.entity.query.UserInfoQuery;
 import com.ezchat.entity.vo.PaginationResultVO;
 import com.ezchat.entity.vo.ResponseVo;
-import com.ezchat.entity.vo.UserInfoVo;
 import com.ezchat.exception.BusinessException;
 import com.ezchat.service.UserInfoService;
-import com.ezchat.utils.CopyUtils;
-import com.ezchat.utils.StringUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
-import java.io.IOException;
 
 @RequestMapping("/admin")
 @RestController("AdminUserInfoController")

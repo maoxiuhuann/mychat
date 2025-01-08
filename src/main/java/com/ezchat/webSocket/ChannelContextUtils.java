@@ -1,18 +1,19 @@
 package com.ezchat.webSocket;
 
 import com.ezchat.constans.Constans;
+import com.ezchat.entity.dto.MessageSendDTO;
 import com.ezchat.entity.dto.WsInitData;
 import com.ezchat.entity.po.ChatSessionUser;
 import com.ezchat.entity.po.UserInfo;
-import com.ezchat.entity.query.ChatSessionQuery;
 import com.ezchat.entity.query.ChatSessionUserQuery;
 import com.ezchat.entity.query.UserInfoQuery;
-import com.ezchat.entity.vo.PaginationResultVO;
+import com.ezchat.enums.MessageTypeEnum;
 import com.ezchat.enums.UserContactTypeEnum;
 import com.ezchat.mappers.UserInfoMapper;
 import com.ezchat.redis.RedisComponent;
 import com.ezchat.service.ChatSessionUserService;
-import com.ezchat.utils.StringUtils;
+import com.ezchat.utils.JsonUtils;
+import com.ezchat.utils.StringTools;
 import io.netty.channel.Channel;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
@@ -23,6 +24,7 @@ import io.netty.util.concurrent.GlobalEventExecutor;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -84,13 +86,13 @@ public class ChannelContextUtils {
         //更新用户最后连接时间
         UserInfo updateInfo = new UserInfo();
         updateInfo.setLastLoginTime(new Date());
-        userInfoMapper.updateByUserId(updateInfo,userId);
+        userInfoMapper.updateByUserId(updateInfo, userId);
 
         //历史消息推送-最近三天
         UserInfo userInfo = userInfoMapper.selectByUserId(userId);
         Long dblastLogOffTime = userInfo.getLastOffTime();
         Long lastLogOffTime = dblastLogOffTime;
-        if (dblastLogOffTime != null && System.currentTimeMillis() - Constans.MILLIS_SECONDS_MESSAGE_EXPIRE > dblastLogOffTime){
+        if (dblastLogOffTime != null && System.currentTimeMillis() - Constans.MILLIS_SECONDS_MESSAGE_EXPIRE > dblastLogOffTime) {
             lastLogOffTime = System.currentTimeMillis() - Constans.MILLIS_SECONDS_MESSAGE_EXPIRE;
         }
         /**
@@ -107,14 +109,31 @@ public class ChannelContextUtils {
         /**
          * 2. 查询聊天消息
          */
-
+        wsInitData.setChatMessageList(new ArrayList<>());
         /**
          * 3.查询好友申请数量
          */
+        wsInitData.setApplyCount(0);
+        //发送消息
+        MessageSendDTO messageSendDTO = new MessageSendDTO();
+        messageSendDTO.setMessageType(MessageTypeEnum.INIT.getType());
+        messageSendDTO.setContactId(userId);
+        messageSendDTO.setExtendData(wsInitData);
+        sendMsg(messageSendDTO, userId);
     }
 
-    public static void sendMsg(){
-
+    public static void sendMsg(MessageSendDTO messageSendDTO, String receiverId) {
+        if (receiverId == null) {
+            return;
+        }
+        Channel sendChannel = USER_CONTEXT_MAP.get(receiverId);
+        if (sendChannel == null){
+            return;
+        }
+        // 相对于客户端而言，联系人就是发送人，所以这里将发送人信息复制到接收人信息中
+        messageSendDTO.setContactId(messageSendDTO.getSendUserId());
+        messageSendDTO.setContactName(messageSendDTO.getSendUserNickName());
+        sendChannel.writeAndFlush(new TextWebSocketFrame(JsonUtils.convertObj2Json(messageSendDTO)));
     }
 
     /**
@@ -141,19 +160,20 @@ public class ChannelContextUtils {
 
     /**
      * 用户离线时，从 ChannelGroup 中移除用户对应的 Channel，更新最后下线时间
+     *
      * @param channel
      */
-    public void removeContext(Channel channel){
+    public void removeContext(Channel channel) {
 
         Attribute<String> attribute = channel.attr(AttributeKey.valueOf(channel.id().toString()));
         String userId = attribute.get();
-        if (!StringUtils.isEmpty(userId)){
+        if (!StringTools.isEmpty(userId)) {
             USER_CONTEXT_MAP.remove(userId);
         }
         redisComponent.removeUserHeartBeat(userId);
         //更新用户最后下线时间
         UserInfo userInfo = new UserInfo();
         userInfo.setLastOffTime(System.currentTimeMillis());
-        userInfoMapper.updateByUserId(userInfo,userId);
+        userInfoMapper.updateByUserId(userInfo, userId);
     }
 }

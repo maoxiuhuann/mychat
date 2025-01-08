@@ -91,4 +91,10 @@ public interface UserContactService {
 	 * @param statusEnum
 	 */
 	void removeUserContact(String userId, String contactId, UserContactStatusEnum statusEnum);
+
+	/**
+	 * 注册时添加机器人好友
+	 * @param userId
+	 */
+	void addContact4Robot(String userId);
 }

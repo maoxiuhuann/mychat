@@ -8,17 +8,18 @@ import org.apache.commons.lang3.RandomStringUtils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 
-public class StringUtils {
+public class StringTools {
     public static void checkParam(Object param) throws BusinessException {
         try {
             Field[] fields = param.getClass().getDeclaredFields();
             boolean notEmpty = false;
             for (Field field : fields) {
-                String methodName = "get" + StringUtils.upperCaseFirstLetter(field.getName());
+                String methodName = "get" + StringTools.upperCaseFirstLetter(field.getName());
                 Method method = param.getClass().getMethod(methodName);
                 Object object = method.invoke(param);
-                if (object != null && object instanceof java.lang.String && !StringUtils.isEmpty(object.toString())
+                if (object != null && object instanceof java.lang.String && !StringTools.isEmpty(object.toString())
                         || object != null && !(object instanceof java.lang.String)) {
                     notEmpty = true;
                     break;
@@ -86,6 +87,25 @@ public class StringUtils {
 
     //md5加密
     public static String encodeMd5(String str) {
-        return StringUtils.isEmpty(str) ? null : DigestUtils.md5Hex(str);
+        return StringTools.isEmpty(str) ? null : DigestUtils.md5Hex(str);
+    }
+
+    //清除html标签,防止xss攻击
+    public static String cleanHtmlTag(String content){
+        if (isEmpty(content)){
+            return content;
+        }
+        content = content.replace("<","&lt;");
+        content = content.replace("\r\n","<br>");
+        content = content.replace("\n","<br>");
+        return content;
+    }
+
+    //生成连个用户的聊天会话ID，保证唯一性，不变
+    public static final String getChatSessionId4User(String[] userIds){
+        Arrays.sort(userIds);
+        return encodeMd5(org.apache.commons.lang3.StringUtils.join(userIds,""));
     }
 }
+
+

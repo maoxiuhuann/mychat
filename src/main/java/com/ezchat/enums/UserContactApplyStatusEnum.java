@@ -1,6 +1,6 @@
 package com.ezchat.enums;
 
-import com.ezchat.utils.StringUtils;
+import com.ezchat.utils.StringTools;
 
 public enum UserContactApplyStatusEnum {
     INIT(0, "待处理"),
@@ -26,7 +26,7 @@ public enum UserContactApplyStatusEnum {
 
     public static UserContactApplyStatusEnum getByStatus(String status) {
         try {
-            if (StringUtils.isEmpty(status)) {
+            if (StringTools.isEmpty(status)) {
                 return null;
             }
             return UserContactApplyStatusEnum.valueOf(status.toUpperCase());

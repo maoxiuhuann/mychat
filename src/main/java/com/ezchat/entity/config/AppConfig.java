@@ -1,6 +1,6 @@
 package com.ezchat.entity.config;
 
-import com.ezchat.utils.StringUtils;
+import com.ezchat.utils.StringTools;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -30,7 +30,7 @@ public class AppConfig {
     }
 
     public String getProjectFolder() {
-        if (StringUtils.isEmpty(projectFolder) && !projectFolder.endsWith("/")) {
+        if (StringTools.isEmpty(projectFolder) && !projectFolder.endsWith("/")) {
             projectFolder = projectFolder + "/";
         }
         return projectFolder;

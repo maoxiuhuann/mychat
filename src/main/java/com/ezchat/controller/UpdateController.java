@@ -4,24 +4,17 @@ import com.ezchat.annotation.GlobalInterceptor;
 import com.ezchat.constans.Constans;
 import com.ezchat.entity.config.AppConfig;
 import com.ezchat.entity.po.AppUpdate;
-import com.ezchat.entity.query.AppUpdateQuery;
 import com.ezchat.entity.vo.AppUpdateVo;
-import com.ezchat.entity.vo.PaginationResultVO;
 import com.ezchat.entity.vo.ResponseVo;
 import com.ezchat.enums.AppUpdateFileTypeEnum;
-import com.ezchat.exception.BusinessException;
 import com.ezchat.service.AppUpdateService;
 import com.ezchat.utils.CopyUtils;
-import com.ezchat.utils.StringUtils;
+import com.ezchat.utils.StringTools;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
 import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 
 
@@ -44,7 +37,7 @@ public class UpdateController extends ABaseController {
     @RequestMapping("/checkVersion")
     @GlobalInterceptor
     public ResponseVo checkVersion(String appVersion, String uid) {
-        if (StringUtils.isEmpty(appVersion)) {
+        if (StringTools.isEmpty(appVersion)) {
             return getSuccessResponseVo(null);
         }
         AppUpdate appUpdate = appUpdateService.getLatestUpdate(appVersion, uid);

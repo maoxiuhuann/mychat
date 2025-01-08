@@ -2,9 +2,8 @@ package com.ezchat.webSocket.netty;
 
 import com.ezchat.entity.dto.TokenUserInfoDTO;
 import com.ezchat.redis.RedisComponent;
-import com.ezchat.utils.StringUtils;
+import com.ezchat.utils.StringTools;
 import com.ezchat.webSocket.ChannelContextUtils;
-import com.sun.org.apache.bcel.internal.generic.IF_ACMPEQ;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -108,7 +107,7 @@ public class HandlerWebSocket extends SimpleChannelInboundHandler<TextWebSocketF
      * @return
      */
     private String getToken(String uri) {
-        if (StringUtils.isEmpty(uri) || uri.indexOf("?") == -1) {
+        if (StringTools.isEmpty(uri) || uri.indexOf("?") == -1) {
             return null;
         }
         String[] queryParams = uri.split("\\?");

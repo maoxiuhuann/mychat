@@ -55,8 +55,8 @@ public class Constans {
     //默认申请理由
     public static final String DEFAULT_APPLY_REASON = "我是%s";
 
-    //密码正则表达式-由字母、数字、特殊字符，任意2种组成，1-9位
-    public static final String REGEX_PASSWORD = "^(?![a-zA-Z]+$)(?!\\d+$)(?![^\\da-zA-Z\\s]+$).{1,9}$";
+    //密码正则表达式-由字母、数字、特殊字符，任意2种组成，1-20位
+    public static final String REGEX_PASSWORD = "^(?![a-zA-Z]+$)(?!\\d+$)(?![^\\da-zA-Z\\s]+$).{1,20}$";
 
     //历史消息-三天前
     public static final Long MILLIS_SECONDS_MESSAGE_EXPIRE = 3 * 24 * 60 * 60 * 1000L;

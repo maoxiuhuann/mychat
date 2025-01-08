@@ -1,6 +1,6 @@
 package com.ezchat.enums;
 
-import com.ezchat.utils.StringUtils;
+import com.ezchat.utils.StringTools;
 
 public enum UserContactTypeEnum {
     USER(0, "U", "好友"),
@@ -30,7 +30,7 @@ public enum UserContactTypeEnum {
 
     public static UserContactTypeEnum getByName(String name) {
         try {
-            if (StringUtils.isEmpty(name)) {
+            if (StringTools.isEmpty(name)) {
                 return null;
             }
 
@@ -42,7 +42,7 @@ public enum UserContactTypeEnum {
 
     public static UserContactTypeEnum getByPrefix(String prefix) {
         try {
-            if (StringUtils.isEmpty(prefix) || prefix.trim().length() == 0) {
+            if (StringTools.isEmpty(prefix) || prefix.trim().length() == 0) {
                 return null;
             }
             prefix = prefix.substring(0, 1);

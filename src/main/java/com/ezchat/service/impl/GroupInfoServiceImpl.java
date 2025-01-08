@@ -6,7 +6,6 @@ import com.ezchat.entity.dto.SysSettingDTO;
 import com.ezchat.entity.po.UserContact;
 import com.ezchat.entity.query.SimplePage;
 import com.ezchat.entity.query.UserContactQuery;
-import com.ezchat.entity.query.UserInfoQuery;
 import com.ezchat.entity.vo.PaginationResultVO;
 import com.ezchat.entity.po.GroupInfo;
 import com.ezchat.entity.query.GroupInfoQuery;
@@ -16,8 +15,7 @@ import com.ezchat.mappers.GroupInfoMapper;
 import com.ezchat.mappers.UserContactMapper;
 import com.ezchat.redis.RedisComponent;
 import com.ezchat.service.GroupInfoService;
-import com.ezchat.utils.StringUtils;
-import com.sun.org.apache.bcel.internal.generic.IF_ACMPEQ;
+import com.ezchat.utils.StringTools;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -139,7 +137,7 @@ public class GroupInfoServiceImpl implements GroupInfoService {
         Date currentDate = new Date();
 
         //新增
-        if (StringUtils.isEmpty(groupInfo.getGroupId())) {
+        if (StringTools.isEmpty(groupInfo.getGroupId())) {
             GroupInfoQuery query = new GroupInfoQuery();
             query.setGroupOwnerId(groupInfo.getGroupOwnerId());
             //查询群主已经创建的群数量
@@ -154,7 +152,7 @@ public class GroupInfoServiceImpl implements GroupInfoService {
             }
 
             groupInfo.setCreateTime(currentDate);
-            groupInfo.setGroupId(StringUtils.getGroupId());
+            groupInfo.setGroupId(StringTools.getGroupId());
             this.groupInfoMapper.insert(groupInfo);
 
             //将群组添加为联系人

@@ -1,6 +1,6 @@
 package com.ezchat.enums;
 
-import com.ezchat.utils.StringUtils;
+import com.ezchat.utils.StringTools;
 
 public enum UserContactStatusEnum {
     NOT_FRIEND(0, "非好友"),
@@ -21,7 +21,7 @@ public enum UserContactStatusEnum {
 
     public static UserContactStatusEnum getByStatus(String status) {
         try {
-            if (StringUtils.isEmpty(status)) {
+            if (StringTools.isEmpty(status)) {
                 return null;
             }
             return UserContactStatusEnum.valueOf(status.toUpperCase());

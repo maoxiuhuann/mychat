@@ -6,10 +6,9 @@ import com.ezchat.entity.dto.TokenUserInfoDTO;
 import com.ezchat.entity.po.UserInfo;
 import com.ezchat.entity.vo.ResponseVo;
 import com.ezchat.entity.vo.UserInfoVo;
-import com.ezchat.enums.UserContactStatusEnum;
 import com.ezchat.service.UserInfoService;
 import com.ezchat.utils.CopyUtils;
-import com.ezchat.utils.StringUtils;
+import com.ezchat.utils.StringTools;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -17,7 +16,6 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import java.io.IOException;
 
@@ -81,7 +79,7 @@ public class UserInfoController extends ABaseController{
     public ResponseVo updatePassword(HttpServletRequest request, @NotEmpty @Pattern(regexp = Constans.REGEX_PASSWORD) String password) {
         TokenUserInfoDTO tokenUserInfoDTO = getTokenUserInfo(request);
         UserInfo userInfo = new UserInfo();
-        userInfo.setPassword(StringUtils.encodeMd5(password));
+        userInfo.setPassword(StringTools.encodeMd5(password));
         userInfoService.updateUserInfoByUserId(userInfo, tokenUserInfoDTO.getUserId());
         //todo 修改密码之后需要强制退出重新登录
         return getUserInfo(null);

@@ -7,7 +7,6 @@ import com.ezchat.entity.po.UserContact;
 import com.ezchat.entity.po.UserInfoVip;
 import com.ezchat.entity.query.SimplePage;
 import com.ezchat.entity.query.UserContactQuery;
-import com.ezchat.entity.query.UserInfoVipQuery;
 import com.ezchat.entity.vo.PaginationResultVO;
 import com.ezchat.entity.po.UserInfo;
 import com.ezchat.entity.query.UserInfoQuery;
@@ -18,10 +17,10 @@ import com.ezchat.mappers.UserContactMapper;
 import com.ezchat.mappers.UserInfoMapper;
 import com.ezchat.mappers.UserInfoVipMapper;
 import com.ezchat.redis.RedisComponent;
+import com.ezchat.service.UserContactService;
 import com.ezchat.service.UserInfoService;
 import com.ezchat.utils.CopyUtils;
-import com.ezchat.utils.StringUtils;
-import com.sun.org.apache.bcel.internal.generic.IF_ACMPEQ;
+import com.ezchat.utils.StringTools;
 import jodd.util.ArraysUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -57,6 +56,10 @@ public class UserInfoServiceImpl implements UserInfoService {
 
     @Autowired
     private UserContactMapper userContactMapper;
+
+    @Resource
+    private UserContactService userContactService;
+
 
 
     /**
@@ -170,12 +173,12 @@ public class UserInfoServiceImpl implements UserInfoService {
         if (null != userInfo) {
             throw new BusinessException("邮箱被注册");
         }
-        String userId = StringUtils.getUserId();
+        String userId = StringTools.getUserId();
         UserInfoVip vipAccount = this.userInfoVipMapper.selectByEmail(email);
         //1.靓号必须存在 2.靓号没有使用 根据这两点判断是否可以使用靓号
         boolean useVipAccount = null != vipAccount && VipAccountStatusEnum.NO_USE.getStatus().equals(vipAccount.getStatus());
         if (useVipAccount) {
-            userId = UserContactTypeEnum.USER.getPrefix() + StringUtils.getRandomNumber(11);
+            userId = userInfoVipMapper.selectByEmail(email).getUserId();
         }
 
         //插入新数据到数据库
@@ -183,7 +186,7 @@ public class UserInfoServiceImpl implements UserInfoService {
         userInfo = new UserInfo();
         userInfo.setUserId(userId);
         userInfo.setEmail(email);
-        userInfo.setPassword(StringUtils.encodeMd5(password));
+        userInfo.setPassword(StringTools.encodeMd5(password));
         userInfo.setNickName(nickname);
         userInfo.setCreateTime(currDate);
         userInfo.setStatus(UserStatusEnum.ENABLE.getStatus());
@@ -198,7 +201,7 @@ public class UserInfoServiceImpl implements UserInfoService {
             this.userInfoVipMapper.updateByUserId(updateVip, vipAccount.getUserId());
         }
         //TODO 注册完创建机器人好友-发送迎新消息
-
+        userContactService.addContact4Robot(userId);
     }
 
     /**
@@ -214,7 +217,7 @@ public class UserInfoServiceImpl implements UserInfoService {
         //用户心跳判断用户是否在其他地方登录
         Long lastHeartBeat = redisComponent.getUserHeartBeat(userInfo.getUserId());
         //阻断式处理，不符合条件的直接抛出异常，只处理符合条件的情况
-        if (null == userInfo || !StringUtils.encodeMd5(password).equals(userInfo.getPassword())) {
+        if (null == userInfo || !StringTools.encodeMd5(password).equals(userInfo.getPassword())) {
             throw new BusinessException("账号或密码错误");
         }
         if (UserStatusEnum.DISABLE.getStatus().equals(userInfo.getStatus())) {
@@ -236,7 +239,7 @@ public class UserInfoServiceImpl implements UserInfoService {
         }
         TokenUserInfoDTO tokenUserInfoDTO = getTokenUserInfoDTO(userInfo);
         //保存登录信息tokenUserInfoDTO到redis
-        String token = StringUtils.encodeMd5(tokenUserInfoDTO.getUserId() + StringUtils.getRandomString(Constans.LENGTH_20));
+        String token = StringTools.encodeMd5(tokenUserInfoDTO.getUserId() + StringTools.getRandomString(Constans.LENGTH_20));
         tokenUserInfoDTO.setToken(token);
         redisComponent.saveTokenUserInfoDTO(tokenUserInfoDTO);
         //将当前用户信息userInfoVo存储到vo对象中返回
@@ -258,7 +261,7 @@ public class UserInfoServiceImpl implements UserInfoService {
         tokenUserInfoDTO.setUserId(userInfo.getUserId());
         tokenUserInfoDTO.setNickName(userInfo.getNickName());
         String adminEmails = appConfig.getAdminEmails();
-        if (StringUtils.isEmpty(adminEmails) && ArraysUtil.contains(adminEmails.split(","), userInfo.getEmail())) {
+        if (!StringTools.isEmpty(adminEmails) && ArraysUtil.contains(adminEmails.split(","), userInfo.getEmail())) {
             tokenUserInfoDTO.setAdmin(true);
         } else {
             tokenUserInfoDTO.setAdmin(false);

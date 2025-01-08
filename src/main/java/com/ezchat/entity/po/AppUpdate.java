@@ -1,6 +1,6 @@
 package com.ezchat.entity.po;
 
-import com.ezchat.utils.StringUtils;
+import com.ezchat.utils.StringTools;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import org.springframework.format.annotation.DateTimeFormat;
 import com.ezchat.utils.DateUtils;
@@ -135,7 +135,7 @@ public class AppUpdate implements Serializable {
 	}
 
 	public String[] getUpdateDescArray() {
-		if (!StringUtils.isEmpty(updateDesc)){
+		if (!StringTools.isEmpty(updateDesc)){
 			return updateDesc.split("\\|");
 		}
 		return updateDescArray;

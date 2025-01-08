@@ -29,6 +29,38 @@ public class ChatSessionUser implements Serializable {
 	 */
 	private String contactName;
 
+	/**
+	 * 会话历史消息
+	 */
+	private String lastMessage;
+
+	/**
+	 * 最后接收时间
+	 */
+	private String lastReceiveTime;
+
+	/**
+	 * 群成员数量
+	 */
+	private Integer memberCount;
+
+
+	public String getLastMessage() {
+		return lastMessage;
+	}
+
+	public void setLastMessage(String lastMessage) {
+		this.lastMessage = lastMessage;
+	}
+
+	public String getLastReceiveTime() {
+		return lastReceiveTime;
+	}
+
+	public void setLastReceiveTime(String lastReceiveTime) {
+		this.lastReceiveTime = lastReceiveTime;
+	}
+
 	public void setUserId(String userId) {
 		this.userId = userId;
 	}
@@ -64,5 +96,13 @@ public class ChatSessionUser implements Serializable {
 	@Override
 	public String toString() {
 		return "用户ID:" + (userId == null ? "空" : userId) + ",联系人ID:" + (contactId == null ? "空" : contactId) + ",会话ID:" + (sessionId == null ? "空" : sessionId) + ",联系人名称:" + (contactName == null ? "空" : contactName);
+	}
+
+	public Integer getMemberCount() {
+		return memberCount;
+	}
+
+	public void setMemberCount(Integer memberCount) {
+		this.memberCount = memberCount;
 	}
 }

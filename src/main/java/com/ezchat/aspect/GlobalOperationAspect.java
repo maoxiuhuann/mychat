@@ -7,7 +7,7 @@ import com.ezchat.entity.dto.TokenUserInfoDTO;
 import com.ezchat.enums.ResponseCodeEnum;
 import com.ezchat.exception.BusinessException;
 import com.ezchat.redis.RedisUtils;
-import com.ezchat.utils.StringUtils;
+import com.ezchat.utils.StringTools;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
@@ -69,7 +69,7 @@ public class GlobalOperationAspect {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
         String token = request.getHeader("token");
         //如果 token 为空，抛出业务异常 CODE_901，表示用户未登录。在redis之前操作，减少一次redis查询
-        if(StringUtils.isEmpty(token)){
+        if(StringTools.isEmpty(token)){
             throw new BusinessException(ResponseCodeEnum.CODE_901);
         }
         TokenUserInfoDTO tokenUserInfoDTO = (TokenUserInfoDTO) redisUtils.get(Constans.REDIS_KEY_WS_TOKEN + token);

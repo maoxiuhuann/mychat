@@ -13,7 +13,7 @@ import com.ezchat.enums.ResponseCodeEnum;
 import com.ezchat.exception.BusinessException;
 import com.ezchat.mappers.AppUpdateMapper;
 import com.ezchat.service.AppUpdateService;
-import com.ezchat.utils.StringUtils;
+import com.ezchat.utils.StringTools;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -211,7 +211,7 @@ public class AppUpdateServiceImpl implements AppUpdateService {
         if (null == statusEnum) {
             throw new BusinessException(ResponseCodeEnum.CODE_600);
         }
-        if (statusEnum == AppUpdateStatusEnum.GRAYSCALE && StringUtils.isEmpty(grayscaleUid)) {
+        if (statusEnum == AppUpdateStatusEnum.GRAYSCALE && StringTools.isEmpty(grayscaleUid)) {
             throw new BusinessException("灰度发布UID不能为空");
         }
         if (AppUpdateStatusEnum.GRAYSCALE != statusEnum){
