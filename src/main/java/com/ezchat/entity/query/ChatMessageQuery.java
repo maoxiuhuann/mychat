@@ -1,6 +1,7 @@
 package com.ezchat.entity.query;
 
 
+import java.util.List;
 
 /**
  * @Description:聊天消息表查询对象
@@ -84,6 +85,32 @@ public class ChatMessageQuery extends BaseQuery {
 	 * 状态 0:正在发送 1:已发送
 	 */
 	private Integer status;
+
+	/**
+	 * 所有应该收到消息的联系人id
+	 */
+	private List<String> contactIdList;
+
+	/**
+	 * 最后一次收到消息的时间
+	 */
+	private Long lastReceiveTime;
+
+	public Long getLastReceiveTime() {
+		return lastReceiveTime;
+	}
+
+	public void setLastReceiveTime(Long lastReceiveTime) {
+		this.lastReceiveTime = lastReceiveTime;
+	}
+
+	public List<String> getContactIdList() {
+		return contactIdList;
+	}
+
+	public void setContactIdList(List<String> contactIdList) {
+		this.contactIdList = contactIdList;
+	}
 
 	public void setMessageId(Long messageId) {
 		this.messageId = messageId;

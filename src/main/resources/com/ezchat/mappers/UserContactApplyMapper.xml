@@ -69,6 +69,10 @@
         <if test="query.applyInfoFuzzy != null and query.applyInfoFuzzy != ''">
             and apply_info like concat('%', #{query.applyInfoFuzzy}, '%')
         </if>
+        <!--额外查询条件-->
+        <if test="query.lastApplyTimeStamp != null">
+            and last_apply_time &gt;= #{query.lastApplyTimeStamp}
+        </if>
     </sql>
 
     <!--扩展查询条件-->
@@ -106,7 +110,7 @@
 
     <!--查询数量-->
     <select id="selectCount" resultType="java.lang.Integer">
-        SELECT count(1) FROM user_contact_apply
+        SELECT count(1) FROM user_contact_apply a
         <include refid="query_condition"/>
     </select>
 

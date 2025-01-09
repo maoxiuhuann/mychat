@@ -100,6 +100,13 @@
 		<if test="query.fileNameFuzzy != null and query.fileNameFuzzy != ''">
 			and file_name like concat('%', #{query.fileNameFuzzy}, '%')
 		</if>
+		<!--额外添加的条件-->
+		<if test="query.lastReceiveTime != null">
+			and send_time &gt;= #{query.lastReceiveTime}
+		</if>
+		<if test="query.contactIdList != null and query.contactIdList.size() > 0">
+			and contact_id in(<foreach collection="query.contactIdList" item="item" separator=",">#{item}</foreach>)
+		</if>
 	</sql>
 
 	<!--扩展查询条件-->
@@ -112,7 +119,8 @@
 
 	<!--查询列表-->
 	<select id="selectList" resultMap="base_result_map">
-		SELECT <include refid="base_column_list"/> FROM chat_message <include refid="query_condition"/>
+		SELECT <include refid="base_column_list"/>
+		FROM chat_message <include refid="query_condition"/>
 		<if test="query.orderBy != null"> order by ${query.orderBy} </if>
 		<if test="query.simplePage!=null"> limit #{query.simplePage.start},#{query.simplePage.end} </if>
 	</select>

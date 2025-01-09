@@ -182,8 +182,8 @@ public class GroupInfoServiceImpl implements GroupInfoService {
         if (null == avatarCover){
             return;
         }
-        String baseFloder = appConfig.getProjectFolder() + Constans.FILE_FOLDER_FILE;
-        File targetFileFolder = new File(baseFloder + Constans.FILE_FOLDER_AVATAR_NAME);
+        String baseFolder = appConfig.getProjectFolder() + Constans.FILE_FOLDER_FILE;
+        File targetFileFolder = new File(baseFolder + Constans.FILE_FOLDER_AVATAR_NAME);
         if (!targetFileFolder.exists()){
             targetFileFolder.mkdirs();
         }

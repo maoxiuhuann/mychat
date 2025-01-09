@@ -1,5 +1,7 @@
 package com.ezchat.entity.po;
 
+import com.ezchat.enums.UserContactTypeEnum;
+
 import java.io.Serializable;
 
 
@@ -43,6 +45,11 @@ public class ChatSessionUser implements Serializable {
 	 * 群成员数量
 	 */
 	private Integer memberCount;
+
+	/**
+	 * 联系人类型
+	 */
+	private Integer contactType;
 
 
 	public String getLastMessage() {
@@ -93,16 +100,24 @@ public class ChatSessionUser implements Serializable {
 		return this.contactName;
 	}
 
-	@Override
-	public String toString() {
-		return "用户ID:" + (userId == null ? "空" : userId) + ",联系人ID:" + (contactId == null ? "空" : contactId) + ",会话ID:" + (sessionId == null ? "空" : sessionId) + ",联系人名称:" + (contactName == null ? "空" : contactName);
-	}
-
 	public Integer getMemberCount() {
 		return memberCount;
 	}
 
 	public void setMemberCount(Integer memberCount) {
 		this.memberCount = memberCount;
+	}
+
+	public Integer getContactType() {
+		return UserContactTypeEnum.getByPrefix(contactId).getType();
+	}
+
+	public void setContactType(Integer contactType) {
+		this.contactType = contactType;
+	}
+
+	@Override
+	public String toString() {
+		return "用户ID:" + (userId == null ? "空" : userId) + ",联系人ID:" + (contactId == null ? "空" : contactId) + ",会话ID:" + (sessionId == null ? "空" : sessionId) + ",联系人名称:" + (contactName == null ? "空" : contactName);
 	}
 }

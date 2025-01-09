@@ -200,7 +200,6 @@ public class UserInfoServiceImpl implements UserInfoService {
             updateVip.setStatus(VipAccountStatusEnum.USED.getStatus());
             this.userInfoVipMapper.updateByUserId(updateVip, vipAccount.getUserId());
         }
-        //TODO 注册完创建机器人好友-发送迎新消息
         userContactService.addContact4Robot(userId);
     }
 

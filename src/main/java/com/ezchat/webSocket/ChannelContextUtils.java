@@ -3,12 +3,19 @@ package com.ezchat.webSocket;
 import com.ezchat.constans.Constans;
 import com.ezchat.entity.dto.MessageSendDTO;
 import com.ezchat.entity.dto.WsInitData;
+import com.ezchat.entity.po.ChatMessage;
 import com.ezchat.entity.po.ChatSessionUser;
+import com.ezchat.entity.po.UserContactApply;
 import com.ezchat.entity.po.UserInfo;
+import com.ezchat.entity.query.ChatMessageQuery;
 import com.ezchat.entity.query.ChatSessionUserQuery;
+import com.ezchat.entity.query.UserContactApplyQuery;
 import com.ezchat.entity.query.UserInfoQuery;
 import com.ezchat.enums.MessageTypeEnum;
+import com.ezchat.enums.UserContactApplyStatusEnum;
 import com.ezchat.enums.UserContactTypeEnum;
+import com.ezchat.mappers.ChatMessageMapper;
+import com.ezchat.mappers.UserContactApplyMapper;
 import com.ezchat.mappers.UserInfoMapper;
 import com.ezchat.redis.RedisComponent;
 import com.ezchat.service.ChatSessionUserService;
@@ -21,6 +28,7 @@ import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.util.Attribute;
 import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.GlobalEventExecutor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -28,6 +36,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 @Component
 public class ChannelContextUtils {
@@ -46,6 +55,12 @@ public class ChannelContextUtils {
 
     @Resource
     private ChatSessionUserService chatSessionUserService;
+
+    @Autowired
+    private ChatMessageMapper<ChatMessage, ChatMessageQuery> chatMessageMapper;
+
+    @Resource
+    private UserContactApplyMapper<UserContactApply, UserContactApplyQuery> userContactApplyMapper;
 
     /**
      * 将用户的上下文信息绑定到 Channel，并加入到指定的群组。
@@ -92,6 +107,7 @@ public class ChannelContextUtils {
         UserInfo userInfo = userInfoMapper.selectByUserId(userId);
         Long dblastLogOffTime = userInfo.getLastOffTime();
         Long lastLogOffTime = dblastLogOffTime;
+        //if判断现在时间减去最后下线时间大于3天，说明用户已经离线3天以上，更新lastLogOffTime为3天前的时间
         if (dblastLogOffTime != null && System.currentTimeMillis() - Constans.MILLIS_SECONDS_MESSAGE_EXPIRE > dblastLogOffTime) {
             lastLogOffTime = System.currentTimeMillis() - Constans.MILLIS_SECONDS_MESSAGE_EXPIRE;
         }
@@ -104,17 +120,32 @@ public class ChannelContextUtils {
         List<ChatSessionUser> chatSessionUserList = chatSessionUserService.findListByParam(sessionUserQuery);
 
         WsInitData wsInitData = new WsInitData();
-        wsInitData.setChatSessionUserList(chatSessionUserList);
+        wsInitData.setChatSessionList(chatSessionUserList);
 
         /**
-         * 2. 查询聊天消息
+         * 2. 查询用户每个会话三天内聊天消息：即查询chatMessage表中contactId是userId和userID加入群组groupId的聊天记录
          */
-        wsInitData.setChatMessageList(new ArrayList<>());
+        List<String> groupIdList = contactIdList.stream().filter(item -> item.startsWith(UserContactTypeEnum.GROUP.getPrefix())).collect(Collectors.toList());
+        groupIdList.add(userId);
+        ChatMessageQuery chatMessageQuery = new ChatMessageQuery();
+        chatMessageQuery.setContactIdList(groupIdList);
+        chatMessageQuery.setLastReceiveTime(lastLogOffTime);
+        List<ChatMessage> chatMessageList = chatMessageMapper.selectList(chatMessageQuery);
+
+        wsInitData.setChatMessageList(chatMessageList);
         /**
          * 3.查询好友申请数量
          */
-        wsInitData.setApplyCount(0);
-        //发送消息
+        UserContactApplyQuery applyQuery = new UserContactApplyQuery();
+        applyQuery.setReceiveUserId(userId);
+        applyQuery.setStatus(UserContactApplyStatusEnum.INIT.getStatus());
+        //只查询离线之后收到的好友申请
+        applyQuery.setLastApplyTimeStamp(lastLogOffTime);
+        Integer applyCount = userContactApplyMapper.selectCount(applyQuery);
+
+        wsInitData.setApplyCount(applyCount);
+
+        //发送消息-wsinit消息其实就是用户成功登录后，接收到的  上次离线后才接收到的新消息，要将这样的消息推送给用户
         MessageSendDTO messageSendDTO = new MessageSendDTO();
         messageSendDTO.setMessageType(MessageTypeEnum.INIT.getType());
         messageSendDTO.setContactId(userId);
@@ -127,7 +158,7 @@ public class ChannelContextUtils {
             return;
         }
         Channel sendChannel = USER_CONTEXT_MAP.get(receiverId);
-        if (sendChannel == null){
+        if (sendChannel == null) {
             return;
         }
         // 相对于客户端而言，联系人就是发送人，所以这里将发送人信息复制到接收人信息中

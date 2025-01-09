@@ -61,6 +61,11 @@ public class UserContactApplyQuery extends BaseQuery {
 	 */
 	private Boolean queryContactInfo;
 
+	/**
+	 * 最后申请时间戳
+	 */
+	private Long LastApplyTimeStamp;
+
 	public void setApplyId(Integer applyId) {
 		this.applyId = applyId;
 	}
@@ -163,5 +168,13 @@ public class UserContactApplyQuery extends BaseQuery {
 
 	public void setQueryContactInfo(Boolean queryContactInfo) {
 		this.queryContactInfo = queryContactInfo;
+	}
+
+	public Long getLastApplyTimeStamp() {
+		return LastApplyTimeStamp;
+	}
+
+	public void setLastApplyTimeStamp(Long lastApplyTimeStamp) {
+		LastApplyTimeStamp = lastApplyTimeStamp;
 	}
 }
