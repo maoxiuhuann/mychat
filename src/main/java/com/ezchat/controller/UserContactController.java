@@ -31,6 +31,9 @@ import javax.validation.constraints.NotNull;
 import java.util.Iterator;
 import java.util.List;
 
+/**
+ * 联系人管理
+ */
 @RestController
 @RequestMapping("/contact")
 public class UserContactController extends ABaseController {

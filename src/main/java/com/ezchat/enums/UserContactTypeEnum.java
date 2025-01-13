@@ -2,6 +2,9 @@ package com.ezchat.enums;
 
 import com.ezchat.utils.StringTools;
 
+/**
+ * 联系人类型
+ */
 public enum UserContactTypeEnum {
     USER(0, "U", "好友"),
     GROUP(1, "G", "群");

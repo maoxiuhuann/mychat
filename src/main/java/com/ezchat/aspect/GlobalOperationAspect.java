@@ -22,6 +22,9 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import javax.servlet.http.HttpServletRequest;
 import java.lang.reflect.Method;
 
+/**
+ * 全局的切面
+ */
 @Aspect
 @Component("globalOperationAspect")
 public class GlobalOperationAspect {

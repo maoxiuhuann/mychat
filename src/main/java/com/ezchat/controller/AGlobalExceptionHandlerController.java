@@ -17,6 +17,9 @@ import javax.el.ELException;
 import javax.servlet.http.HttpServletRequest;
 import java.net.BindException;
 
+/**
+ * 全局异常处理器
+ */
 @RestControllerAdvice
 public class AGlobalExceptionHandlerController extends ABaseController {
 

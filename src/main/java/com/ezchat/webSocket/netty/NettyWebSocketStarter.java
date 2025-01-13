@@ -13,6 +13,7 @@ import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.timeout.IdleStateHandler;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Async;
@@ -22,7 +23,9 @@ import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 import java.util.concurrent.TimeUnit;
 
-
+/**
+ * websocket启动器
+ */
 @Component
 public class NettyWebSocketStarter implements Runnable{
 
@@ -79,8 +82,13 @@ public class NettyWebSocketStarter implements Runnable{
                             pipeline.addLast(handlerWebSocket);
                         }
                     });
+            Integer wsPort = appConfig.getWsPort();
+            String wsPortStr = System.getProperty("ws.port");
+            if (!StringUtils.isEmpty(wsPortStr)){
+                wsPort = Integer.parseInt(wsPortStr);
+            }
             //sync(): 阻塞当前线程直到绑定操作完成。
-            ChannelFuture channelFuture = serverBootstrap.bind(appConfig.getWsPort()).sync();
+            ChannelFuture channelFuture = serverBootstrap.bind(wsPort).sync();
             logger.info("Netty服务启动成功，端口:{}",appConfig.getWsPort());
             //阻塞当前线程，等待服务端通道关闭。
             channelFuture.channel().closeFuture().sync();

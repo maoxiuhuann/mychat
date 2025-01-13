@@ -2,6 +2,9 @@ package com.ezchat.entity.dto;
 
 import java.io.Serializable;
 
+/**
+ * token信息
+ */
 public class TokenUserInfoDTO implements Serializable {
 
     private String token;

@@ -2,6 +2,7 @@ package com.ezchat.controller;
 
 import com.ezchat.annotation.GlobalInterceptor;
 import com.ezchat.constans.Constans;
+import com.ezchat.entity.dto.MessageSendDTO;
 import com.ezchat.entity.vo.ResponseVo;
 
 import com.ezchat.entity.vo.UserInfoVo;
@@ -9,6 +10,7 @@ import com.ezchat.exception.BusinessException;
 import com.ezchat.redis.RedisComponent;
 import com.ezchat.redis.RedisUtils;
 import com.ezchat.service.UserInfoService;
+import com.ezchat.webSocket.MessageHandler;
 import com.wf.captcha.ArithmeticCaptcha;
 
 
@@ -27,6 +29,9 @@ import java.util.Map;
 import java.util.UUID;
 
 
+/**
+ * 账号控信息
+ */
 @RestController("accountController")
 @RequestMapping("/account")
 @Validated
@@ -42,6 +47,9 @@ public class AccountController extends ABaseController {
 
     @Autowired
     private RedisComponent redisComponent;
+
+    @Autowired
+    private MessageHandler messageHandler;
 
     /**
      * 登录注册-验证码逻辑
@@ -119,5 +127,13 @@ public class AccountController extends ABaseController {
     @RequestMapping("/getSysSetting")
     public ResponseVo getSysSettings() throws BusinessException {
         return getSuccessResponseVo(redisComponent.getSysSetting());
+    }
+
+    @RequestMapping("/test")
+    public ResponseVo test() {
+        MessageSendDTO sendDto = new MessageSendDTO();
+        sendDto.setMessageContent("HHHHH"+System.currentTimeMillis());
+        messageHandler.sendMessage(sendDto);
+        return getSuccessResponseVo(null);
     }
 }

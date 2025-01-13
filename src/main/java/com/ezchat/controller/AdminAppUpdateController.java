@@ -16,6 +16,9 @@ import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
 
+/**
+ * 管理员发布app更新控制层
+ */
 @RequestMapping("/admin")
 @RestController("AdminAppUpdateController")
 public class AdminAppUpdateController extends ABaseController{

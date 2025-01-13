@@ -38,6 +38,9 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+/**
+ * ws通道工具类
+ */
 @Component
 public class ChannelContextUtils {
 
@@ -153,7 +156,7 @@ public class ChannelContextUtils {
         sendMsg(messageSendDTO, userId);
     }
 
-    public static void sendMsg(MessageSendDTO messageSendDTO, String receiverId) {
+    public void sendMsg(MessageSendDTO messageSendDTO, String receiverId) {
         if (receiverId == null) {
             return;
         }

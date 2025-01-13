@@ -21,6 +21,9 @@ import javax.validation.constraints.NotEmpty;
 import java.io.File;
 import java.io.IOException;
 
+/**
+ * 管理员系统设置
+ */
 @RequestMapping("/admin")
 @RestController("AdminSettingController")
 public class AdminSettingController extends ABaseController{

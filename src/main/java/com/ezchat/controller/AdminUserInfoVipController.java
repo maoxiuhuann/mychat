@@ -16,6 +16,9 @@ import javax.annotation.Resource;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 
+/**
+ * 管理员靓号管理
+ */
 @RequestMapping("/admin")
 @RestController("AdminUserInfoVipController")
 public class AdminUserInfoVipController extends ABaseController{

@@ -18,6 +18,9 @@ import javax.annotation.Resource;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 
+/**
+ * 管理员群组管理
+ */
 @RequestMapping("/admin")
 @RestController("AdminGroupController")
 public class AdminGroupVipController extends ABaseController{

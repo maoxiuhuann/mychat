@@ -18,6 +18,9 @@ import java.io.File;
 import java.util.Arrays;
 
 
+/**
+ * 检查app更新
+ */
 @RequestMapping("/admin")
 @RestController("UpdateController")
 public class UpdateController extends ABaseController {

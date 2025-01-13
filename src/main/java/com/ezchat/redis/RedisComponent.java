@@ -9,6 +9,9 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 import java.util.List;
 
+/**
+ * redis常用操作
+ */
 @Component("redisComponent")
 public class RedisComponent {
 

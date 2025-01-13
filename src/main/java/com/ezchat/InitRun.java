@@ -13,6 +13,9 @@ import javax.annotation.Resource;
 import javax.sql.DataSource;
 import java.sql.SQLException;
 
+/**
+ * 初始化信息
+ */
 @Component("initRun")
 public class InitRun implements ApplicationRunner {
 

@@ -2,6 +2,9 @@ package com.ezchat.constans;
 
 import com.ezchat.enums.UserContactTypeEnum;
 
+/**
+ * 常量
+ */
 public class Constans {
     //redis过期时间常量
     public static final Integer REDIS_TIME_1MIN = 60;

@@ -5,6 +5,9 @@ import com.ezchat.entity.po.ChatSessionUser;
 
 import java.util.List;
 
+/**
+ * ws初始化信息
+ */
 public class WsInitData {
 
     private List<ChatSessionUser> chatSessionList;

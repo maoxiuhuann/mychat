@@ -19,6 +19,9 @@ import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.Pattern;
 import java.io.IOException;
 
+/**
+ * 管理用户信息
+ */
 @RequestMapping("/userInfo")
 @RestController
 public class UserInfoController extends ABaseController{

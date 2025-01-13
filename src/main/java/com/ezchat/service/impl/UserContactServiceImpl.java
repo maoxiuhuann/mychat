@@ -1,6 +1,7 @@
 package com.ezchat.service.impl;
 
 import com.ezchat.constans.Constans;
+import com.ezchat.entity.dto.MessageSendDTO;
 import com.ezchat.entity.dto.SysSettingDTO;
 import com.ezchat.entity.dto.TokenUserInfoDTO;
 import com.ezchat.entity.dto.UserContactSearchResultDTO;
@@ -14,6 +15,7 @@ import com.ezchat.redis.RedisComponent;
 import com.ezchat.service.UserContactService;
 import com.ezchat.utils.CopyUtils;
 import com.ezchat.utils.StringTools;
+import com.ezchat.webSocket.ChannelContextUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -54,6 +56,9 @@ public class UserContactServiceImpl implements UserContactService {
 
     @Resource
     private ChatMessageMapper<ChatMessage, ChatMessageQuery> chatMessageMapper;
+
+    @Resource
+    private ChannelContextUtils channelContextUtils;
 
     /**
      * 根据条件查询列表
@@ -247,6 +252,7 @@ public class UserContactServiceImpl implements UserContactService {
         }
         if (dbApply == null || !UserContactApplyStatusEnum.INIT.getStatus().TYPE.equals(dbApply.getStatus())) {
             //TODO 发送申请信息给接收方
+            MessageSendDTO messageSendDTO = new MessageSendDTO();
         }
         return joinType;
     }

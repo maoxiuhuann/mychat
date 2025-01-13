@@ -28,10 +28,9 @@ import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.util.List;
 
+
 /**
- * @Description:Controller
- * @author:xiuyuan
- * @date:2024/12/16
+ * 群组信息
  */
 @RestController
 @RequestMapping("/group")
