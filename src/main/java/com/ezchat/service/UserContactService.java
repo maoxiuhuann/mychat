@@ -68,11 +68,7 @@ public interface UserContactService {
 	 */
 	UserContactSearchResultDTO searchContact(String userId, String contactId);
 
-	/**
-	 * 申请添加联系人
-	 * @return
-	 */
-	Integer applyAdd(TokenUserInfoDTO tokenUserInfoDTO, String contactId,String applyInfo) throws BusinessException;
+
 
 	/**
 	 * 添加联系人

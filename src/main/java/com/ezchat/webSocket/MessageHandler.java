@@ -27,12 +27,16 @@ public class MessageHandler {
     @Resource
     private ChannelContextUtils channelContextUtils;
 
+    /**
+     * 该注解用于标记一个方法，该方法将在当前Bean的依赖注入完成后被自动调用。在这里，它确保在MessageHandler类被实例化后，监听功能会开始工作。
+     */
     @PostConstruct
     public void listenMessage() {
         RTopic rTopic = redissonClient.getTopic(MESSAGE_TOPIC);
+        // 添加一个监听器，监听MessageSendDTO类型的消息
         rTopic.addListener(MessageSendDTO.class,(MessageSendDTO,sendDTO)->{
             logger.info("收到广播消息：{}", JsonUtils.convertObj2Json(sendDTO));
-            //channelContextUtils.sendMsg(sendDTO);
+            channelContextUtils.sendMessage(sendDTO);
         });
     }
 

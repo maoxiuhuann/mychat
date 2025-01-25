@@ -1,5 +1,6 @@
 package com.ezchat.service;
 
+import com.ezchat.entity.dto.TokenUserInfoDTO;
 import com.ezchat.entity.vo.PaginationResultVO;
 import com.ezchat.entity.po.UserContactApply;
 import com.ezchat.entity.query.UserContactApplyQuery;
@@ -73,6 +74,12 @@ public interface UserContactApplyService {
      * 根据ApplyUserIdAndReceiveUserIdAndContactId删除数据
      */
     Integer deleteUserContactApplyByApplyUserIdAndReceiveUserIdAndContactId(String applyUserId, String receiveUserId, String contactId);
+
+    /**
+     * 申请添加联系人
+     * @return
+     */
+    Integer applyAdd(TokenUserInfoDTO tokenUserInfoDTO, String contactId, String applyInfo) throws BusinessException;
 
 	/**
 	 * 处理申请

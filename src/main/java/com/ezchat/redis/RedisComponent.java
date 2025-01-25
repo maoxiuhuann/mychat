@@ -85,6 +85,18 @@ public class RedisComponent {
         return tokenUserInfoDTO;
     }
 
+    /**
+     * 根据用户id清除用户token
+     * @param userId
+     */
+    public void cleanUserTokenByUserId(String userId){
+        String token = (String) redisUtils.get(Constans.REDIS_KEY_WS_TOKEN_USERID + userId);
+        if (token!= null){
+            return;
+        }
+        redisUtils.delete(Constans.REDIS_KEY_WS_TOKEN + token);
+    }
+
 
     /**
      * 清除用户的联系人列表redis缓存

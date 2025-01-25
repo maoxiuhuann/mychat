@@ -1,24 +1,33 @@
 package com.ezchat.service.impl;
 
-import com.ezchat.entity.dto.SysSettingDTO;
+import com.ezchat.constans.Constans;
+import com.ezchat.entity.dto.MessageSendDTO;
+
+import com.ezchat.entity.dto.TokenUserInfoDTO;
+import com.ezchat.entity.po.GroupInfo;
 import com.ezchat.entity.po.UserContact;
-import com.ezchat.entity.query.SimplePage;
-import com.ezchat.entity.query.UserContactQuery;
+import com.ezchat.entity.po.UserInfo;
+import com.ezchat.entity.query.*;
 import com.ezchat.entity.vo.PaginationResultVO;
 import com.ezchat.entity.po.UserContactApply;
-import com.ezchat.entity.query.UserContactApplyQuery;
 import com.ezchat.enums.*;
 import com.ezchat.exception.BusinessException;
+import com.ezchat.mappers.GroupInfoMapper;
 import com.ezchat.mappers.UserContactApplyMapper;
 import com.ezchat.mappers.UserContactMapper;
-import com.ezchat.redis.RedisComponent;
+import com.ezchat.mappers.UserInfoMapper;
+
 import com.ezchat.service.UserContactApplyService;
 import com.ezchat.service.UserContactService;
+import com.ezchat.utils.StringTools;
+import com.ezchat.webSocket.ChannelContextUtils;
+import com.ezchat.webSocket.MessageHandler;
+import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
+
 import java.util.Date;
 import java.util.List;
 
@@ -38,6 +47,20 @@ public class UserContactApplyServiceImpl implements UserContactApplyService {
 
     @Resource
     private UserContactService  userContactService;
+
+    @Resource
+    private ChannelContextUtils channelContextUtils;
+
+    @Resource
+    private MessageHandler messageHandler;
+
+    @Resource
+    private UserInfoMapper<UserInfo, UserInfoQuery> userInfoMapper;
+
+    @Resource
+    private GroupInfoMapper<GroupInfo, GroupInfoQuery> groupInfoMapper;
+
+
 
     /**
      * 根据条件查询列表
@@ -134,6 +157,89 @@ public class UserContactApplyServiceImpl implements UserContactApplyService {
     public Integer deleteUserContactApplyByApplyUserIdAndReceiveUserIdAndContactId(String applyUserId, String receiveUserId, String contactId) {
         return this.userContactApplyMapper.deleteByApplyUserIdAndReceiveUserIdAndContactId(applyUserId, receiveUserId, contactId);
     }
+
+    /**
+     * 申请添加联系人
+     *
+     * @param tokenUserInfoDTO
+     * @param contactId
+     * @param applyInfo
+     * @return
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Integer applyAdd(TokenUserInfoDTO tokenUserInfoDTO, String contactId, String applyInfo) throws BusinessException {
+        UserContactTypeEnum contactTypeEnum = UserContactTypeEnum.getByPrefix(contactId);
+        if (null == contactTypeEnum) {
+            throw new BusinessException(ResponseCodeEnum.CODE_600);
+        }
+        //发送申请的用户
+        String applyUserId = tokenUserInfoDTO.getUserId();
+        //默认申请信息
+        applyInfo = StringTools.isEmpty(applyInfo) ? String.format(Constans.DEFAULT_APPLY_REASON, tokenUserInfoDTO.getNickName()) : applyInfo;
+        Long currentTime = System.currentTimeMillis();
+        Integer joinType = null;
+        //收到申请的用户
+        String receiveUserId = contactId;
+        //查询是否已经是好友,如果已经拉黑则无法添加
+        UserContact userContact = userContactService.getUserContactByUserIdAndContactId(applyUserId, receiveUserId);
+        if (null != userContact && ArrayUtils.contains(new Integer[]{
+                UserContactStatusEnum.BLACKLIST_BE.getStatus(),
+                UserContactStatusEnum.BLACKLIST_BE_FIRST.getStatus()}, userContact.getStatus())
+        ) {
+            throw new BusinessException("对方将你拉黑，无法添加");
+        }
+        if (UserContactTypeEnum.GROUP == contactTypeEnum) {
+            GroupInfo groupInfo = this.groupInfoMapper.selectByGroupId(contactId);
+            if (null == groupInfo || GroupStatusEnum.DISSOLUTION.getStatus().equals(groupInfo.getStatus())) {
+                throw new BusinessException("该群不存在或已解散，无法添加");
+            }
+
+            receiveUserId = groupInfo.getGroupOwnerId();
+            joinType = groupInfo.getJoinType();
+        } else {
+            UserInfo userInfo = this.userInfoMapper.selectByUserId(contactId);
+            if (null == userInfo) {
+                throw new BusinessException(ResponseCodeEnum.CODE_600);
+            }
+            joinType = userInfo.getJoinType();
+        }
+        //直接加入不用添加申请记录
+        if (JoinTypeEnum.JOIN.getType().equals(joinType)) {
+            userContactService.addContact(applyUserId, receiveUserId, contactId, contactTypeEnum.getType(), applyInfo);
+            return joinType;
+        }
+        //查询数据库中是否已经有申请记录
+        UserContactApply dbApply = this.userContactApplyMapper.selectByApplyUserIdAndReceiveUserIdAndContactId(applyUserId, receiveUserId, contactId);
+        if (null == dbApply) {
+            UserContactApply apply = new UserContactApply();
+            apply.setApplyUserId(applyUserId);
+            apply.setContactType(contactTypeEnum.getType());
+            apply.setReceiveUserId(receiveUserId);
+            apply.setLastApplyTime(currentTime);
+            apply.setContactId(contactId);
+            apply.setStatus(UserContactApplyStatusEnum.INIT.getStatus());
+            apply.setApplyInfo(applyInfo);
+            this.userContactApplyMapper.insert(apply);
+        } else {
+            //如果已经有申请记录，则更新申请信息
+            UserContactApply apply = new UserContactApply();
+            apply.setStatus(UserContactApplyStatusEnum.INIT.getStatus());
+            apply.setLastApplyTime(currentTime);
+            apply.setApplyInfo(applyInfo);
+            this.userContactApplyMapper.updateByApplyId(apply, dbApply.getApplyId());
+        }
+        // 发送申请信息给接收方
+        if (dbApply == null || !UserContactApplyStatusEnum.INIT.getStatus().TYPE.equals(dbApply.getStatus())) {
+            MessageSendDTO messageSendDTO = new MessageSendDTO();
+            messageSendDTO.setMessageType(MessageTypeEnum.CONTACT_APPLY.getType());
+            messageSendDTO.setMessageContent(applyInfo);
+            messageSendDTO.setContactId(receiveUserId);
+            messageHandler.sendMessage(messageSendDTO);
+        }
+        return joinType;
+    }
+
 
     /**
      * 处理申请

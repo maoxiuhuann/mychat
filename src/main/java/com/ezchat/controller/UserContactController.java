@@ -74,7 +74,7 @@ public class UserContactController extends ABaseController {
     @GlobalInterceptor
     public ResponseVo applyAdd(HttpServletRequest request, @NotEmpty String contactId, String applyInfo) throws BusinessException {
         TokenUserInfoDTO tokenUserInfoDTO = getTokenUserInfo(request);
-        Integer joinType = userContactService.applyAdd(tokenUserInfoDTO, contactId, applyInfo);
+        Integer joinType = userContactApplyService.applyAdd(tokenUserInfoDTO, contactId, applyInfo);
         return getSuccessResponseVo(joinType);
     }
 
