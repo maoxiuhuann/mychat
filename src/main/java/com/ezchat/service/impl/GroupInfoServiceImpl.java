@@ -2,20 +2,20 @@ package com.ezchat.service.impl;
 
 import com.ezchat.constans.Constans;
 import com.ezchat.entity.config.AppConfig;
+import com.ezchat.entity.dto.MessageSendDTO;
 import com.ezchat.entity.dto.SysSettingDTO;
-import com.ezchat.entity.po.UserContact;
-import com.ezchat.entity.query.SimplePage;
-import com.ezchat.entity.query.UserContactQuery;
+import com.ezchat.entity.po.*;
+import com.ezchat.entity.query.*;
 import com.ezchat.entity.vo.PaginationResultVO;
-import com.ezchat.entity.po.GroupInfo;
-import com.ezchat.entity.query.GroupInfoQuery;
 import com.ezchat.enums.*;
 import com.ezchat.exception.BusinessException;
-import com.ezchat.mappers.GroupInfoMapper;
-import com.ezchat.mappers.UserContactMapper;
+import com.ezchat.mappers.*;
 import com.ezchat.redis.RedisComponent;
 import com.ezchat.service.GroupInfoService;
+import com.ezchat.utils.CopyUtils;
 import com.ezchat.utils.StringTools;
+import com.ezchat.webSocket.ChannelContextUtils;
+import com.ezchat.webSocket.MessageHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,6 +47,19 @@ public class GroupInfoServiceImpl implements GroupInfoService {
     @Autowired
     private AppConfig appConfig;
 
+    @Resource
+    private ChatSessionMapper<ChatSession, ChatSessionQuery> chatSessionMapper;
+
+    @Resource
+    private ChatSessionUserMapper<ChatSessionUser, ChatSessionUserQuery> chatSessionUserMapper;
+
+    @Resource
+    private ChatMessageMapper<ChatMessage, ChatMessageQuery> chatMessageMapper;
+
+    @Resource
+    private ChannelContextUtils channelContextUtils;
+    @Autowired
+    private MessageHandler messageHandler;
 
     /**
      * 根据条件查询列表
@@ -165,8 +178,46 @@ public class GroupInfoServiceImpl implements GroupInfoService {
             userContact.setLastUpdateTime(currentDate);
             this.userContactMapper.insert(userContact);
 
-            //TODO 创建会话
-            //TODO 发送欢迎消息
+            // 创建会话
+            String sessionId = StringTools.getChatSessionId4Group(groupInfo.getGroupId());
+            ChatSession chatSession = new ChatSession();
+            chatSession.setSessionId(sessionId);
+            chatSession.setLastMessage(MessageTypeEnum.GROUP_CREATE.getInitMessage());
+            chatSession.setLastReceiveTime(currentDate.getTime());
+            chatSessionMapper.insertOrUpdate(chatSession);
+
+            //创建群主会话
+            ChatSessionUser chatSessionUser = new ChatSessionUser();
+            chatSessionUser.setSessionId(sessionId);
+            chatSessionUser.setUserId(groupInfo.getGroupOwnerId());
+            chatSessionUser.setContactId(groupInfo.getGroupId());
+            chatSessionUser.setContactName(groupInfo.getGroupName());
+            chatSessionUserMapper.insert(chatSessionUser);
+
+            //创建消息
+            ChatMessage chatMessage = new ChatMessage();
+            chatMessage.setSessionId(sessionId);
+            chatMessage.setMessageType(MessageTypeEnum.GROUP_CREATE.getType());
+            chatMessage.setMessageContent(MessageTypeEnum.GROUP_CREATE.getInitMessage());
+            chatMessage.setSendTime(currentDate.getTime());
+            chatMessage.setContactId(groupInfo.getGroupId());
+            chatMessage.setContactType(UserContactTypeEnum.GROUP.getType());
+            chatMessage.setStatus(MessageStatusEnum.SENDED.getStatus());
+            chatMessageMapper.insert(chatMessage);
+            //将群组添加到联系人缓存中
+            redisComponent.addUserContact(groupInfo.getGroupOwnerId(), groupInfo.getGroupId());
+            //将群主加入群组通道
+            channelContextUtils.addUser2Group(groupInfo.getGroupOwnerId(), groupInfo.getGroupId());
+
+            // 发送ws欢迎消息
+            chatSessionUser.setLastMessage(MessageTypeEnum.GROUP_CREATE.getInitMessage());
+            chatSessionUser.setLastReceiveTime(currentDate.getTime());
+            chatSessionUser.setMemberCount(1);
+
+            MessageSendDTO messageSendDTO = CopyUtils.copy(chatMessage, MessageSendDTO.class);
+            messageSendDTO.setExtendData(chatSessionUser);
+            messageSendDTO.setLastMessage(chatSessionUser.getLastMessage());
+            messageHandler.sendMessage(messageSendDTO);
         } else {
             //修改
             GroupInfo dbInfo = this.groupInfoMapper.selectByGroupId(groupInfo.getGroupId());

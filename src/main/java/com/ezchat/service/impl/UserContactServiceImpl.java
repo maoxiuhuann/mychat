@@ -18,6 +18,7 @@ import com.ezchat.utils.StringTools;
 import com.ezchat.webSocket.ChannelContextUtils;
 import com.ezchat.webSocket.MessageHandler;
 import org.apache.commons.lang3.ArrayUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -57,7 +58,8 @@ public class UserContactServiceImpl implements UserContactService {
 
     @Resource
     private ChatMessageMapper<ChatMessage, ChatMessageQuery> chatMessageMapper;
-
+    @Autowired
+    private ChannelContextUtils channelContextUtils;
 
 
     /**
@@ -229,22 +231,22 @@ public class UserContactServiceImpl implements UserContactService {
         //申请人添加对方为好友，对方有可能是群组或者用户，添加缓存
         redisComponent.addUserContact(applyUserID, contactId);
         // 如果是被申请人是用户，接收人也添加申请人为好友，添加缓存
-        if (UserContactTypeEnum.USER.getType().equals(contactType)){
-            redisComponent.addUserContact(receivedUserID,applyUserID);
+        if (UserContactTypeEnum.USER.getType().equals(contactType)) {
+            redisComponent.addUserContact(receivedUserID, applyUserID);
         }
         // 创建会话
         String sessionId = null;
         //如果是两个用户之间的会话
-        if (UserContactTypeEnum.USER.getType().equals(contactType)){
-            sessionId = StringTools.getChatSessionId4User(new String[]{applyUserID,receivedUserID});
-        }else {
+        if (UserContactTypeEnum.USER.getType().equals(contactType)) {
+            sessionId = StringTools.getChatSessionId4User(new String[]{applyUserID, receivedUserID});
+        } else {
             //如果是群组之间的会话
             sessionId = StringTools.getChatSessionId4Group(contactId);
         }
 
         List<ChatSessionUser> chatSessionUserList = new ArrayList<>();
 
-        if (UserContactTypeEnum.USER.getType().equals(contactType)){
+        if (UserContactTypeEnum.USER.getType().equals(contactType)) {
             //创建会话
             //对chatSession表的操作
             ChatSession chatSession = new ChatSession();
@@ -293,8 +295,50 @@ public class UserContactServiceImpl implements UserContactService {
             messageSendDTO.setContactId(applyUserID);
             messageSendDTO.setExtendData(contactUser);
             messageHandler.sendMessage(messageSendDTO);
-        }else {
+        } else {
+            //加入群组
+            ChatSessionUser chatSessionUser = new ChatSessionUser();
+            chatSessionUser.setUserId(applyUserID);
+            chatSessionUser.setContactId(contactId);
+            GroupInfo groupInfo = this.groupInfoMapper.selectByGroupId(contactId);
+            chatSessionUser.setContactId(groupInfo.getGroupId());
+            chatSessionUser.setContactName(groupInfo.getGroupName());
+            chatSessionUser.setSessionId(sessionId);
+            chatSessionUserMapper.insert(chatSessionUser);
 
+            UserInfo applyUserInfo = userInfoMapper.selectByUserId(applyUserID);
+            String sendMessage = String.format(MessageTypeEnum.ADD_GROUP.getInitMessage(), applyUserInfo.getNickName());
+            //增加session信息
+            ChatSession session = new ChatSession();
+            session.setSessionId(sessionId);
+            session.setLastReceiveTime(currentDate.getTime());
+            session.setLastMessage(sendMessage);
+            //增加聊天消息
+            ChatMessage chatMessage = new ChatMessage();
+            chatMessage.setSessionId(sessionId);
+            chatMessage.setMessageType(MessageTypeEnum.ADD_GROUP.getType());
+            chatMessage.setMessageContent(sendMessage);
+            chatMessage.setSendTime(currentDate.getTime());
+            chatMessage.setContactId(contactId);
+            chatMessage.setContactType(UserContactTypeEnum.GROUP.getType());
+            chatMessage.setStatus(MessageStatusEnum.SENDED.getStatus());
+            chatMessageMapper.insert(chatMessage);
+            //将群组添加到申请人的联系人列表中
+            redisComponent.addUserContact(applyUserID, groupInfo.getGroupId());
+            //todo 集群部署，当前用户的channel和channelGroup可能不在同一台服务器上，需要同步，如何解决？
+            //将申请人通道添加到群组通道
+            channelContextUtils.addUser2Group(applyUserID, groupInfo.getGroupId());
+            //发送消息
+            MessageSendDTO messageSendDTO = CopyUtils.copy(chatMessage, MessageSendDTO.class);
+            messageSendDTO.setContactId(contactId);
+            //获取群成员数量
+            UserContactQuery userContactQuery = new UserContactQuery();
+            userContactQuery.setContactId(contactId);
+            userContactQuery.setStatus(UserContactStatusEnum.FRIEND.getStatus());
+            Integer memberCount = userContactMapper.selectCount(userContactQuery);
+            messageSendDTO.setMemberCount(memberCount);
+            messageSendDTO.setContactName(groupInfo.getGroupName());
+            messageHandler.sendMessage(messageSendDTO);
         }
     }
 

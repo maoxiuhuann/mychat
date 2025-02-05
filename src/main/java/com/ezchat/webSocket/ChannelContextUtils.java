@@ -147,7 +147,7 @@ public class ChannelContextUtils {
 
         wsInitData.setApplyCount(applyCount);
 
-        //发送消息-wsinit消息其实就是用户成功登录后，接收到的  上次离线后才接收到的新消息，要将这样的消息推送给用户
+        //发送消息-wsinit消息其实就是用户成功登录后，接收到的  “上次离线后才接收到的新消息”   ，要将这样的消息推送给用户
         MessageSendDTO messageSendDTO = new MessageSendDTO();
         messageSendDTO.setMessageType(MessageTypeEnum.INIT.getType());
         messageSendDTO.setContactId(userId);
@@ -176,6 +176,11 @@ public class ChannelContextUtils {
             return;
         }
         group.add(channel);
+    }
+
+    public void addUser2Group(String userId, String groupId) {
+        Channel channel = USER_CONTEXT_MAP.get(userId);
+        add2Group(groupId, channel);
     }
 
     /**
@@ -272,4 +277,6 @@ public class ChannelContextUtils {
         }
         channel.close();
     }
+
+
 }
