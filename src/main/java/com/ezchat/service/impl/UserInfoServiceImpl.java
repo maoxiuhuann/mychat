@@ -59,7 +59,8 @@ public class UserInfoServiceImpl implements UserInfoService {
 
     @Resource
     private UserContactService userContactService;
-
+    @Autowired
+    private ChatSessionUserServiceImpl chatSessionUserService;
 
 
     /**
@@ -294,10 +295,19 @@ public class UserInfoServiceImpl implements UserInfoService {
 
         userInfoMapper.updateByUserId(userInfo, userInfo.getUserId());
         String contactNameUpdate = null;
-        if (dbInfo.getNickName().equals(userInfo.getNickName())){
+        if (!dbInfo.getNickName().equals(userInfo.getNickName())){
             contactNameUpdate = userInfo.getNickName();
         }
-        //TODO 更新会很信息中的昵称信息
+        if (null == contactNameUpdate){
+            return;
+        }
+        //更新token中的昵称
+        TokenUserInfoDTO tokenUserInfoDTO = redisComponent.getTokenUserInfoDTOByUserId(userInfo.getUserId());
+        tokenUserInfoDTO.setNickName(contactNameUpdate);
+        redisComponent.saveTokenUserInfoDTO(tokenUserInfoDTO);
+        //更新冗余信息、修改昵称发送ws消息-实时更新昵称
+        chatSessionUserService.updateRedundanceInfo(contactNameUpdate, userInfo.getUserId());
+
     }
 
     /**

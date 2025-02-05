@@ -78,7 +78,9 @@ public class ChannelContextUtils {
     public void addContext(String userId, Channel channel) {
         String channelId = channel.id().toString();
 
-        // 创建或获取 AttributeKey，绑定用户 ID
+        // 创建或获取 AttributeKey，绑定用户 ID--在 Netty 框架中，AttributeKey<T> 是一个 通道（Channel）级别的属性存储机制，用于在 Channel 上存储和获取与之相关的 自定义数据。
+
+        //AttributeKey<T> 主要用于给 Channel 绑定用户 ID、会话信息等，在整个连接生命周期中可以随时访问。
         AttributeKey attributeKey = null;
         if (!AttributeKey.exists(channelId)) {
             attributeKey = AttributeKey.newInstance(channelId);
@@ -115,6 +117,22 @@ public class ChannelContextUtils {
         }
         /**
          * 1.查询会话信息，查询用户所有的会话信息，保证换设备也能够同步会话
+         * SELECT
+         * 	u.*,
+         * 	c.last_message lastMessage,
+         * 	c.last_receive_time lastReceiveTime,
+         * CASE
+         *
+         * 		WHEN substring( contact_id, 1, 1 )= 'G' THEN
+         * 		( SELECT count( 1 ) FROM user_contact uc WHERE uc.contact_id = u.contact_id ) ELSE 0
+         * 	END memberCount
+         * FROM
+         * 	chat_session_user u
+         * 	INNER JOIN chat_session c ON c.session_id = u.session_id
+         * WHERE
+         * 	user_id = ?
+         * ORDER BY
+         * 	last_receive_time DESC
          */
         ChatSessionUserQuery sessionUserQuery = new ChatSessionUserQuery();
         sessionUserQuery.setUserId(userId);
@@ -126,6 +144,25 @@ public class ChannelContextUtils {
 
         /**
          * 2. 查询用户每个会话三天内聊天消息：即查询chatMessage表中contactId是userId和userID加入群组groupId的聊天记录
+         * SELECT
+         * 	message_id,
+         * 	session_id,
+         * 	message_type,
+         * 	message_content,
+         * 	send_user_id,
+         * 	send_user_nick_name,
+         * 	send_time,
+         * 	contact_id,
+         * 	contact_type,
+         * 	file_size,
+         * 	file_name,
+         * 	file_type,
+         * STATUS
+         * FROM
+         * 	chat_message
+         * WHERE
+         * 	send_time >= ?
+         * 	AND contact_id IN (?,?,?,?)
          */
         List<String> groupIdList = contactIdList.stream().filter(item -> item.startsWith(UserContactTypeEnum.GROUP.getPrefix())).collect(Collectors.toList());
         groupIdList.add(userId);
@@ -137,6 +174,14 @@ public class ChannelContextUtils {
         wsInitData.setChatMessageList(chatMessageList);
         /**
          * 3.查询好友申请数量
+         * SELECT
+         * 	count( 1 )
+         * FROM
+         * 	user_contact_apply a
+         * WHERE
+         * 	receive_user_id = ?
+         * 	AND a.STATUS = ?
+         * 	AND last_apply_time >= ?
          */
         UserContactApplyQuery applyQuery = new UserContactApplyQuery();
         applyQuery.setReceiveUserId(userId);

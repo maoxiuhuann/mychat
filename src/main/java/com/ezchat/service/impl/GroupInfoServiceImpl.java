@@ -60,6 +60,8 @@ public class GroupInfoServiceImpl implements GroupInfoService {
     private ChannelContextUtils channelContextUtils;
     @Autowired
     private MessageHandler messageHandler;
+    @Autowired
+    private ChatSessionUserServiceImpl chatSessionUserService;
 
     /**
      * 根据条件查询列表
@@ -226,9 +228,15 @@ public class GroupInfoServiceImpl implements GroupInfoService {
                 throw new BusinessException(ResponseCodeEnum.CODE_600);
             }
             this.groupInfoMapper.updateByGroupId(groupInfo, groupInfo.getGroupId());
-            //TODO 更新相关表冗余信息
-
-            //TODO 修改群昵称发送ws消息-实时更新群昵称
+            //更新冗余信息、修改昵称发送ws消息-实时更新昵称
+            String contactNameUpdate = null;
+            if (!dbInfo.getGroupName().equals(groupInfo.getGroupName())){
+                contactNameUpdate = groupInfo.getGroupName();
+            }
+            if (contactNameUpdate == null){
+                return;
+            }
+            chatSessionUserService.updateRedundanceInfo(contactNameUpdate, groupInfo.getGroupId());
         }
         if (null == avatarCover){
             return;

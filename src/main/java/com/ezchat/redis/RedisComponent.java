@@ -86,6 +86,17 @@ public class RedisComponent {
     }
 
     /**
+     * 根据用户id获取token对应的用户信息
+     *
+     * @param userId
+     * @return
+     */
+    public TokenUserInfoDTO getTokenUserInfoDTOByUserId(String userId) {
+        String token = (String) redisUtils.get(Constans.REDIS_KEY_WS_TOKEN_USERID + userId);
+        return getTokenUserInfoDTO(token);
+    }
+
+    /**
      * 根据用户id清除用户token
      * @param userId
      */
