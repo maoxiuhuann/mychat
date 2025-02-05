@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit;
  * websocket启动器
  */
 @Component
-public class NettyWebSocketStarter implements Runnable{
+public class NettyWebSocketStarter implements Runnable {
 
     private static final Logger logger = LoggerFactory.getLogger(NettyWebSocketStarter.class);
     //处理连接
@@ -42,7 +42,7 @@ public class NettyWebSocketStarter implements Runnable{
     private AppConfig appConfig;
 
     @PreDestroy
-    private void close(){
+    private void close() {
         bossGroup.shutdownGracefully();
         workerGroup.shutdownGracefully();
     }
@@ -73,7 +73,7 @@ public class NettyWebSocketStarter implements Runnable{
                             pipeline.addLast(new HttpObjectAggregator(64 * 1024));
                             //心跳 long readerIdleTime, long writerIdleTime, long allIdleTime, TimeUnit unit
                             //读超时时间，写超时时间，所有超时类型时间，单位-设置心跳规则
-                            pipeline.addLast(new IdleStateHandler(60, 0, 0, TimeUnit.SECONDS));
+                            pipeline.addLast(new IdleStateHandler(60 * 30, 0, 0, TimeUnit.SECONDS));
                             //自定义处理器-处理心跳
                             pipeline.addLast(new HandlerHeartBeat());
                             //添加一个 WebSocket 协议处理器 WebSocketServerProtocolHandler，将 HTTP 升级为 WebSocket。参数 "/ws": 指定 WebSocket 的 URI。
@@ -84,12 +84,12 @@ public class NettyWebSocketStarter implements Runnable{
                     });
             Integer wsPort = appConfig.getWsPort();
             String wsPortStr = System.getProperty("ws.port");
-            if (!StringUtils.isEmpty(wsPortStr)){
+            if (!StringUtils.isEmpty(wsPortStr)) {
                 wsPort = Integer.parseInt(wsPortStr);
             }
             //sync(): 阻塞当前线程直到绑定操作完成。
             ChannelFuture channelFuture = serverBootstrap.bind(wsPort).sync();
-            logger.info("Netty服务启动成功，端口:{}",appConfig.getWsPort());
+            logger.info("Netty服务启动成功，端口:{}", appConfig.getWsPort());
             //阻塞当前线程，等待服务端通道关闭。
             channelFuture.channel().closeFuture().sync();
         } catch (Exception e) {

@@ -5,6 +5,7 @@ import com.ezchat.enums.UserContactTypeEnum;
 import com.ezchat.exception.BusinessException;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -101,10 +102,15 @@ public class StringTools {
         return content;
     }
 
-    //生成连个用户的聊天会话ID，保证唯一性，不变
+    //生成两个用户的聊天会话ID，保证唯一性，不变
     public static final String getChatSessionId4User(String[] userIds){
         Arrays.sort(userIds);
-        return encodeMd5(org.apache.commons.lang3.StringUtils.join(userIds,""));
+        return encodeMd5(StringUtils.join(userIds,""));
+    }
+
+    //生成用户和群组之间的聊天会话ID，保证唯一性，不变
+    public static final String getChatSessionId4Group(String groupId){
+        return encodeMd5(groupId);
     }
 }
 

@@ -27,9 +27,8 @@ public class MessageHandler {
     @Resource
     private ChannelContextUtils channelContextUtils;
 
-    /**
-     * 该注解用于标记一个方法，该方法将在当前Bean的依赖注入完成后被自动调用。在这里，它确保在MessageHandler类被实例化后，监听功能会开始工作。
-     */
+
+    //该注解用于标记一个方法，该方法将在当前Bean的依赖注入完成后被自动调用。在这里，它确保在MessageHandler类被实例化后，监听功能会开始工作。
     @PostConstruct
     public void listenMessage() {
         RTopic rTopic = redissonClient.getTopic(MESSAGE_TOPIC);

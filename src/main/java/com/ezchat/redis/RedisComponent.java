@@ -33,9 +33,9 @@ public class RedisComponent {
      *
      * @param userId
      */
-    //todo 测试时为了方便讲心跳时间改为1分钟，后期改为六秒
+    //todo 测试时为了方便将心跳时间改为1分钟，后期改为六秒
     public void saveUserHeartBeat(String userId) {
-        redisUtils.setex(Constans.REDIS_KEY_WS_USER_HEART_BEAT + userId, System.currentTimeMillis(), Constans.REDIS_TIME_1MIN);
+        redisUtils.setex(Constans.REDIS_KEY_WS_USER_HEART_BEAT + userId, System.currentTimeMillis(), Constans.REDIS_TIME_1MIN * 30);
     }
 
     public void removeUserHeartBeat(String userId) {
@@ -108,13 +108,26 @@ public class RedisComponent {
 
 
     /**
-     * 将用户的联系人列表保存到redis
+     * 将用户的联系人列表批量保存到redis
      *
      * @param userId
      * @param contactIdList
      */
     public void addUserContactBatch(String userId, List<String> contactIdList) {
         redisUtils.lpushAll(Constans.REDIS_KEY_USER_CONTACT + userId, contactIdList, Constans.REDIS_KEY_EXPIRES_2_DAY);
+    }
+
+    /**
+     * 将用户的联系人保存到redis
+     * @param userId
+     * @param contactId
+     */
+    public void addUserContact(String userId, String contactId) {
+        List<String> contactIdList = getUserContactList(userId);
+        if (contactIdList.contains(contactId)){
+            return;
+        }
+        redisUtils.lpush(Constans.REDIS_KEY_USER_CONTACT + userId, contactId, Constans.REDIS_KEY_EXPIRES_2_DAY);
     }
 
     /**

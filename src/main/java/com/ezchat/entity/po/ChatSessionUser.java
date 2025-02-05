@@ -39,7 +39,7 @@ public class ChatSessionUser implements Serializable {
 	/**
 	 * 最后接收时间
 	 */
-	private String lastReceiveTime;
+	private Long lastReceiveTime;
 
 	/**
 	 * 群成员数量
@@ -60,11 +60,11 @@ public class ChatSessionUser implements Serializable {
 		this.lastMessage = lastMessage;
 	}
 
-	public String getLastReceiveTime() {
+	public Long getLastReceiveTime() {
 		return lastReceiveTime;
 	}
 
-	public void setLastReceiveTime(String lastReceiveTime) {
+	public void setLastReceiveTime(Long lastReceiveTime) {
 		this.lastReceiveTime = lastReceiveTime;
 	}
 

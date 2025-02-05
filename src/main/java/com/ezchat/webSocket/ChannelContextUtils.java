@@ -223,22 +223,6 @@ public class ChannelContextUtils {
         }
     }
 
-    /**
-     * 关闭通道
-     * @param userId
-     */
-    public void closeContext(String userId){
-        if (StringTools.isEmpty(userId)){
-            return;
-        }
-        redisComponent.cleanUserTokenByUserId(userId);
-        Channel channel = USER_CONTEXT_MAP.get(userId);
-        if (channel == null){
-            return;
-        }
-        channel.close();
-    }
-
     //发送给群组
     private void send2Group(MessageSendDTO messageSendDTO) {
         String contactId = messageSendDTO.getContactId();
@@ -258,9 +242,34 @@ public class ChannelContextUtils {
         if (userChannel == null) {
             return;
         }
-        // 相对于客户端而言，联系人就是发送人，所以这里将发送人信息复制到接收人信息中
-        messageSendDTO.setContactId(messageSendDTO.getSendUserId());
-        messageSendDTO.setContactName(messageSendDTO.getSendUserNickName());
+        // 申请人发送的好友消息直接渲染到自己的消息列表
+        if (MessageTypeEnum.ADD_FRIEND_SELF.getType().equals(messageSendDTO.getMessageType())){
+            UserInfo userInfo = (UserInfo) messageSendDTO.getExtendData();
+            messageSendDTO.setMessageType(MessageTypeEnum.ADD_FRIEND.getType());
+            messageSendDTO.setContactId(userInfo.getUserId());
+            messageSendDTO.setContactName(userInfo.getNickName());
+            messageSendDTO.setExtendData(null);
+        }else {
+            // A -> B 的信息，B 的 客户端会收到 A 的信息，对客户端来说，B 收到的消息 contactId 应该是 A 的 ID，contactName 应该是 A 的昵称,好友申请的时候不处理
+            messageSendDTO.setContactId(messageSendDTO.getSendUserId());
+            messageSendDTO.setContactName(messageSendDTO.getSendUserNickName());
+        }
         userChannel.writeAndFlush(new TextWebSocketFrame(JsonUtils.convertObj2Json(messageSendDTO)));
+    }
+
+    /**
+     * 关闭通道
+     * @param userId
+     */
+    public void closeContext(String userId){
+        if (StringTools.isEmpty(userId)){
+            return;
+        }
+        redisComponent.cleanUserTokenByUserId(userId);
+        Channel channel = USER_CONTEXT_MAP.get(userId);
+        if (channel == null){
+            return;
+        }
+        channel.close();
     }
 }
