@@ -1,8 +1,11 @@
 package com.ezchat.service;
 
+import com.ezchat.entity.dto.MessageSendDTO;
+import com.ezchat.entity.dto.TokenUserInfoDTO;
 import com.ezchat.entity.vo.PaginationResultVO;
 import com.ezchat.entity.po.ChatMessage;
 import com.ezchat.entity.query.ChatMessageQuery;
+import com.ezchat.exception.BusinessException;
 
 import java.util.List;
 /**
@@ -57,4 +60,9 @@ public interface ChatMessageService {
 	 */
 	Integer deleteChatMessageByMessageId(Long messageId);
 
+	/**
+	 * 发送消息
+	 * @return
+	 */
+    MessageSendDTO saveAndSendMessage(ChatMessage chatMessage, TokenUserInfoDTO tokenUserInfoDTO) throws BusinessException;
 }

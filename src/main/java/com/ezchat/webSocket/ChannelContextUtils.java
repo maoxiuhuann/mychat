@@ -15,10 +15,11 @@ import com.ezchat.enums.MessageTypeEnum;
 import com.ezchat.enums.UserContactApplyStatusEnum;
 import com.ezchat.enums.UserContactTypeEnum;
 import com.ezchat.mappers.ChatMessageMapper;
+import com.ezchat.mappers.ChatSessionUserMapper;
 import com.ezchat.mappers.UserContactApplyMapper;
 import com.ezchat.mappers.UserInfoMapper;
 import com.ezchat.redis.RedisComponent;
-import com.ezchat.service.ChatSessionUserService;
+
 import com.ezchat.utils.JsonUtils;
 import com.ezchat.utils.StringTools;
 import io.netty.channel.Channel;
@@ -56,7 +57,7 @@ public class ChannelContextUtils {
     private UserInfoMapper<UserInfo, UserInfoQuery> userInfoMapper;
 
     @Resource
-    private ChatSessionUserService chatSessionUserService;
+    private ChatSessionUserMapper<ChatSessionUser, ChatSessionUserQuery> chatSessionUserMapper;
 
     @Autowired
     private ChatMessageMapper<ChatMessage, ChatMessageQuery> chatMessageMapper;
@@ -137,7 +138,7 @@ public class ChannelContextUtils {
         ChatSessionUserQuery sessionUserQuery = new ChatSessionUserQuery();
         sessionUserQuery.setUserId(userId);
         sessionUserQuery.setOrderBy("last_receive_time desc");
-        List<ChatSessionUser> chatSessionUserList = chatSessionUserService.findListByParam(sessionUserQuery);
+        List<ChatSessionUser> chatSessionUserList = chatSessionUserMapper.selectList(sessionUserQuery);
 
         WsInitData wsInitData = new WsInitData();
         wsInitData.setChatSessionList(chatSessionUserList);
