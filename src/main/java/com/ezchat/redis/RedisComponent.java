@@ -33,7 +33,7 @@ public class RedisComponent {
      *
      * @param userId
      */
-    //todo 测试时为了方便将心跳时间改为1分钟，后期改为六秒
+    //todo 测试时为了方便将心跳时间改为30分钟，后期改为六秒
     public void saveUserHeartBeat(String userId) {
         redisUtils.setex(Constans.REDIS_KEY_WS_USER_HEART_BEAT + userId, System.currentTimeMillis(), Constans.REDIS_TIME_1MIN * 30);
     }

@@ -301,7 +301,6 @@ public class UserContactServiceImpl implements UserContactService {
             chatSessionUser.setUserId(applyUserID);
             chatSessionUser.setContactId(contactId);
             GroupInfo groupInfo = this.groupInfoMapper.selectByGroupId(contactId);
-            chatSessionUser.setContactId(groupInfo.getGroupId());
             chatSessionUser.setContactName(groupInfo.getGroupName());
             chatSessionUser.setSessionId(sessionId);
             chatSessionUserMapper.insertOrUpdate(chatSessionUser);
@@ -368,8 +367,10 @@ public class UserContactServiceImpl implements UserContactService {
             friendContact.setStatus(UserContactStatusEnum.BLACKLIST_BE.getStatus());
         }
         userContactMapper.updateByUserIdAndContactId(friendContact, contactId, userId);
-        //todo 从我的好友列表缓存中删除好友
-        //todo 从好友列表缓存中删除我
+        // 从我的好友列表缓存中删除好友
+        redisComponent.removeUserContact(userId, contactId);
+        // 从好友列表缓存中删除我
+        redisComponent.removeUserContact(contactId, userId);
     }
 
     /**

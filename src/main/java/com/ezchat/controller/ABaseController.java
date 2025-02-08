@@ -29,8 +29,6 @@ public class ABaseController {
         return responseVo;
     }
 
-    //TODO: 完善ezjava
-
     protected <T> ResponseVo getBusinessErrorResponseVo(BusinessException e, T t) {
         ResponseVo<T> responseVo = new ResponseVo<>();
         responseVo.setStatus(STATUS_ERROR);

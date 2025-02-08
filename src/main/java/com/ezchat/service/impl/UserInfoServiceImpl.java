@@ -2,6 +2,7 @@ package com.ezchat.service.impl;
 
 import com.ezchat.constans.Constans;
 import com.ezchat.entity.config.AppConfig;
+import com.ezchat.entity.dto.MessageSendDTO;
 import com.ezchat.entity.dto.TokenUserInfoDTO;
 import com.ezchat.entity.po.UserContact;
 import com.ezchat.entity.po.UserInfoVip;
@@ -21,6 +22,7 @@ import com.ezchat.service.UserContactService;
 import com.ezchat.service.UserInfoService;
 import com.ezchat.utils.CopyUtils;
 import com.ezchat.utils.StringTools;
+import com.ezchat.webSocket.MessageHandler;
 import jodd.util.ArraysUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -61,6 +63,8 @@ public class UserInfoServiceImpl implements UserInfoService {
     private UserContactService userContactService;
     @Autowired
     private ChatSessionUserServiceImpl chatSessionUserService;
+    @Autowired
+    private MessageHandler messageHandler;
 
 
     /**
@@ -333,7 +337,12 @@ public class UserInfoServiceImpl implements UserInfoService {
      */
     @Override
     public void forceOffLine(String userId) {
-        //TODO 强制下线，清除登录信息，清除缓存信息
+        // 强制下线，清除登录信息，清除缓存信息
+        MessageSendDTO sendDTO  = new MessageSendDTO();
+        sendDTO.setContactType(UserContactTypeEnum.USER.getType());
+        sendDTO.setMessageType(MessageTypeEnum.FORCE_OFF_LINE.getType());
+        sendDTO.setContactId(userId);
+        messageHandler.sendMessage(sendDTO);
     }
 }
 

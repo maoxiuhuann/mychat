@@ -96,7 +96,7 @@ public class UserContactController extends ABaseController {
         query.setPageSize(PageSize.SIZE15.getSize());
         //加载申请人的昵称-用户查看自己的申请列表时，需要显示申请人的昵称
         query.setQueryContactInfo(true);
-        //TODO 根据实际sql更新xml文件：例如表取别名及时在相关代码中更新
+        // 根据实际sql更新xml文件：例如表取别名及时在相关代码中更新
         //SELECT 查询的sql语句
         //	a.*,
         //CASE

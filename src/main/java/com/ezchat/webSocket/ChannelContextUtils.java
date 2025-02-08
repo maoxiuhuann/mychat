@@ -266,6 +266,7 @@ public class ChannelContextUtils {
         if (StringTools.isEmpty(contactId)) {
             return;
         }
+        //先发消息再断开连接
         sendMsg(messageSendDTO, contactId);
         //强制下线
         if (MessageTypeEnum.FORCE_OFF_LINE.getType().equals(messageSendDTO.getMessageType())){
