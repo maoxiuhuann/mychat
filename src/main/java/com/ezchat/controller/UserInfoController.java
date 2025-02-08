@@ -9,6 +9,7 @@ import com.ezchat.entity.vo.UserInfoVo;
 import com.ezchat.service.UserInfoService;
 import com.ezchat.utils.CopyUtils;
 import com.ezchat.utils.StringTools;
+import com.ezchat.webSocket.ChannelContextUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -28,6 +29,9 @@ public class UserInfoController extends ABaseController{
 
     @Resource
     private UserInfoService userInfoService;
+
+    @Resource
+    private ChannelContextUtils channelContextUtils;
 
     /**
      * 获取用户自己账号信息 -po数据库、vo返回给前端视图、dto不同类之间的数据传输对象
@@ -68,7 +72,7 @@ public class UserInfoController extends ABaseController{
 
         this.userInfoService.updateUserInfo(userInfo, avatarFile, avatarCover);
 
-        return getUserInfo(request);
+        return getSuccessResponseVo(request);
     }
 
     /**
@@ -84,8 +88,9 @@ public class UserInfoController extends ABaseController{
         UserInfo userInfo = new UserInfo();
         userInfo.setPassword(StringTools.encodeMd5(password));
         userInfoService.updateUserInfoByUserId(userInfo, tokenUserInfoDTO.getUserId());
-        //todo 修改密码之后需要强制退出重新登录
-        return getUserInfo(null);
+        // 修改密码之后需要强制退出重新登录
+        channelContextUtils.closeContext(tokenUserInfoDTO.getUserId());
+        return getSuccessResponseVo(null);
     }
 
     /**
@@ -98,7 +103,8 @@ public class UserInfoController extends ABaseController{
     @GlobalInterceptor
     public ResponseVo logout(HttpServletRequest request, @NotEmpty @Pattern(regexp = Constans.REGEX_PASSWORD) String password) {
         TokenUserInfoDTO tokenUserInfoDTO = getTokenUserInfo(request);
-        //todo 退出登录，关闭ws连接
-        return getUserInfo(null);
+        // 退出登录，关闭ws连接
+        channelContextUtils.closeContext(tokenUserInfoDTO.getUserId());
+        return getSuccessResponseVo(null);
     }
 }

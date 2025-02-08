@@ -1,8 +1,10 @@
 package com.ezchat.service;
 
+import com.ezchat.entity.dto.TokenUserInfoDTO;
 import com.ezchat.entity.vo.PaginationResultVO;
 import com.ezchat.entity.po.GroupInfo;
 import com.ezchat.entity.query.GroupInfoQuery;
+import com.ezchat.enums.MessageTypeEnum;
 import com.ezchat.exception.BusinessException;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -63,6 +65,7 @@ public interface GroupInfoService {
 
     /**
      * 保存群组信息-新增或修改
+     *
      * @param groupInfo
      * @param avatarFile
      * @param avatarCover
@@ -71,9 +74,27 @@ public interface GroupInfoService {
 
     /**
      * 解散群组
+     *
      * @param groupOwnerId
      * @param groupId
      */
-    void dissolutionGroup(String groupOwnerId,String groupId) throws BusinessException;
+    void dissolutionGroup(String groupOwnerId, String groupId) throws BusinessException;
 
+    /**
+     * 操作群成员
+     *
+     * @param tokenUserInfoDTO
+     * @param groupId
+     * @param selectContacts
+     * @param opType
+     */
+    void addOrUpdateGroupMember(TokenUserInfoDTO tokenUserInfoDTO, String groupId, String selectContacts, Integer opType) throws BusinessException;
+
+    /**
+     * 离开群聊
+     * @param contactId
+     * @param groupId
+     * @param messageTypeEnum
+     */
+    void leaveGroup(String contactId, String groupId, MessageTypeEnum messageTypeEnum) throws BusinessException;
 }

@@ -140,6 +140,13 @@ public class ChatMessageServiceImpl implements ChatMessageService {
         return this.chatMessageMapper.deleteByMessageId(messageId);
     }
 
+    /**
+     * 发送以及入库消息
+     * @param chatMessage
+     * @param tokenUserInfoDTO
+     * @return
+     * @throws BusinessException
+     */
     @Override
     public MessageSendDTO saveAndSendMessage(ChatMessage chatMessage, TokenUserInfoDTO tokenUserInfoDTO) throws BusinessException {
         //不是机器人回复，判断好友状态

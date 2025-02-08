@@ -285,6 +285,22 @@ public class ChannelContextUtils {
             return;
         }
         channelGroup.writeAndFlush(new TextWebSocketFrame(JsonUtils.convertObj2Json(messageSendDTO)));
+        //todo writeAndFlush方法是异步的，如何确保消息一定被群组中的所有用户接收到，
+        //移除群组消息
+        MessageTypeEnum messageTypeEnum = MessageTypeEnum.getByType(messageSendDTO.getMessageType());
+        if (MessageTypeEnum.LEAVE_GROUP.equals(messageTypeEnum) || messageTypeEnum.REMOVE_GROUP.equals(messageTypeEnum)){
+            String userId = (String) messageSendDTO.getExtendData();
+            redisComponent.removeUserContact(userId, contactId);
+            Channel channel = USER_CONTEXT_MAP.get(userId);
+            if (channel == null){
+                return;
+            }
+            channelGroup.remove(channel);
+        }
+        if (MessageTypeEnum.DISSOLUTION_GROUP.equals(messageTypeEnum)){
+            GROUP_CONCURRENT_MAP.remove(contactId);
+            channelGroup.close();
+        }
     }
 
     // 发送消息

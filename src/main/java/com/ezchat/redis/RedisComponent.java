@@ -98,11 +98,12 @@ public class RedisComponent {
 
     /**
      * 根据用户id清除用户token
+     *
      * @param userId
      */
-    public void cleanUserTokenByUserId(String userId){
+    public void cleanUserTokenByUserId(String userId) {
         String token = (String) redisUtils.get(Constans.REDIS_KEY_WS_TOKEN_USERID + userId);
-        if (token!= null){
+        if (token != null) {
             return;
         }
         redisUtils.delete(Constans.REDIS_KEY_WS_TOKEN + token);
@@ -111,9 +112,10 @@ public class RedisComponent {
 
     /**
      * 清除用户的联系人列表redis缓存
+     *
      * @param userId
      */
-    public void cleanUserContact(String userId){
+    public void cleanUserContact(String userId) {
         redisUtils.delete(Constans.REDIS_KEY_USER_CONTACT + userId);
     }
 
@@ -130,12 +132,13 @@ public class RedisComponent {
 
     /**
      * 将用户的联系人保存到redis
+     *
      * @param userId
      * @param contactId
      */
     public void addUserContact(String userId, String contactId) {
         List<String> contactIdList = getUserContactList(userId);
-        if (contactIdList.contains(contactId)){
+        if (contactIdList.contains(contactId)) {
             return;
         }
         redisUtils.lpush(Constans.REDIS_KEY_USER_CONTACT + userId, contactId, Constans.REDIS_KEY_EXPIRES_2_DAY);
@@ -143,10 +146,18 @@ public class RedisComponent {
 
     /**
      * 获取用户的联系人列表
+     *
      * @param userId
      * @return
      */
     public List<String> getUserContactList(String userId) {
         return (List<String>) redisUtils.getQueueList(Constans.REDIS_KEY_USER_CONTACT + userId);
+    }
+
+    /**
+     * 删除用户的联系人列表
+     */
+    public void removeUserContact(String userId, String contactId) {
+        redisUtils.remove(Constans.REDIS_KEY_USER_CONTACT + userId, contactId);
     }
 }

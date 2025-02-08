@@ -304,7 +304,7 @@ public class UserContactServiceImpl implements UserContactService {
             chatSessionUser.setContactId(groupInfo.getGroupId());
             chatSessionUser.setContactName(groupInfo.getGroupName());
             chatSessionUser.setSessionId(sessionId);
-            chatSessionUserMapper.insert(chatSessionUser);
+            chatSessionUserMapper.insertOrUpdate(chatSessionUser);
 
             UserInfo applyUserInfo = userInfoMapper.selectByUserId(applyUserID);
             String sendMessage = String.format(MessageTypeEnum.ADD_GROUP.getInitMessage(), applyUserInfo.getNickName());

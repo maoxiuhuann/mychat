@@ -9,11 +9,13 @@ import com.ezchat.entity.query.UserContactQuery;
 import com.ezchat.entity.vo.GroupInfoVo;
 import com.ezchat.entity.vo.ResponseVo;
 import com.ezchat.enums.GroupStatusEnum;
+import com.ezchat.enums.MessageTypeEnum;
 import com.ezchat.enums.UserContactStatusEnum;
 import com.ezchat.exception.BusinessException;
 import com.ezchat.mappers.UserContactMapper;
 import com.ezchat.service.GroupInfoService;
 import com.ezchat.service.UserContactService;
+import com.sun.org.apache.bcel.internal.generic.PUSH;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -121,6 +123,7 @@ public class GroupInfoController extends ABaseController {
 
     /**
      * 聊天窗口内获取群聊详情
+     *
      * @param request
      * @param groupId
      * @return
@@ -150,23 +153,74 @@ public class GroupInfoController extends ABaseController {
 
     /**
      * 获取通用群聊详情
+     *
      * @param request
      * @param groupId
      * @return
      * @throws BusinessException
      */
-    private GroupInfo getGroupDetailCommon(HttpServletRequest request, String groupId) throws BusinessException {
+    public GroupInfo getGroupDetailCommon(HttpServletRequest request, String groupId) throws BusinessException {
         //从header中获取token-已经使用AOP保证token不为空即用户已经登陆
         TokenUserInfoDTO tokenUserInfoDTO = getTokenUserInfo(request);
         //限制只有加入了群聊的成员才能查看群组详情
         UserContact userContact = this.userContactService.getUserContactByUserIdAndContactId(tokenUserInfoDTO.getUserId(), groupId);
-        if (null == userContact || !UserContactStatusEnum.FRIEND.getStatus().equals(userContact.getStatus())){
+        if (null == userContact || !UserContactStatusEnum.FRIEND.getStatus().equals(userContact.getStatus())) {
             throw new BusinessException("您没有权限查看该群组信息-请先加入该群组或群聊已经解散");
         }
         GroupInfo groupInfo = this.groupInfoService.getGroupInfoByGroupId(groupId);
-        if (null == groupInfo || !GroupStatusEnum.NORMAL.getStatus().equals(groupInfo.getStatus())){
+        if (null == groupInfo || !GroupStatusEnum.NORMAL.getStatus().equals(groupInfo.getStatus())) {
             throw new BusinessException("该群组不存在或已经被解散");
         }
         return groupInfo;
+    }
+
+    /**
+     * 操作群组成员
+     * @param request
+     * @param groupId
+     * @param selectContacts
+     * @param opType
+     * @return
+     * @throws BusinessException
+     */
+    @RequestMapping("/addOrUpdateGroupMember")
+    @GlobalInterceptor
+    public ResponseVo addOrUpdateGroupMember(HttpServletRequest request,
+                                             @NotEmpty String groupId,
+                                             @NotEmpty String selectContacts, @NotNull Integer opType) throws BusinessException {
+
+        TokenUserInfoDTO tokenUserInfoDTO = getTokenUserInfo(request);
+        groupInfoService.addOrUpdateGroupMember(tokenUserInfoDTO, groupId, selectContacts, opType);
+        return getSuccessResponseVo(null);
+    }
+
+    /**
+     * 退群
+     * @param request
+     * @param groupId
+     * @return
+     * @throws BusinessException
+     */
+    @RequestMapping("/leaveGroup")
+    @GlobalInterceptor
+    public ResponseVo leaveGroup(HttpServletRequest request,@NotEmpty String groupId) throws BusinessException {
+        TokenUserInfoDTO tokenUserInfoDTO = getTokenUserInfo(request);
+        groupInfoService.leaveGroup(tokenUserInfoDTO.getUserId(), groupId, MessageTypeEnum.LEAVE_GROUP);
+        return getSuccessResponseVo(null);
+    }
+
+    /**
+     * 解散群组
+     * @param request
+     * @param groupId
+     * @return
+     * @throws BusinessException
+     */
+    @RequestMapping("/dissolutionGroup")
+    @GlobalInterceptor
+    public ResponseVo dissolutionGroup(HttpServletRequest request,@NotEmpty String groupId) throws BusinessException {
+        TokenUserInfoDTO tokenUserInfoDTO = getTokenUserInfo(request);
+        groupInfoService.dissolutionGroup(tokenUserInfoDTO.getUserId(), groupId);
+        return getSuccessResponseVo(null);
     }
 }

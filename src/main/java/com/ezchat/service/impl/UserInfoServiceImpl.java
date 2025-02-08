@@ -212,7 +212,6 @@ public class UserInfoServiceImpl implements UserInfoService {
      */
     @Override
     public UserInfoVo login(String email, String password) throws BusinessException {
-        //todo 登录的心跳是否是netty心跳？登录后不发送消息难道就相当于不在线？如何改进？
         UserInfo userInfo = this.userInfoMapper.selectByEmail(email);
         //用户心跳判断用户是否在其他地方登录
         Long lastHeartBeat = redisComponent.getUserHeartBeat(userInfo.getUserId());
