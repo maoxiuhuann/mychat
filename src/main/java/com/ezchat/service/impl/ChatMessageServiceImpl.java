@@ -8,17 +8,15 @@ import com.ezchat.entity.dto.TokenUserInfoDTO;
 import com.ezchat.entity.po.ChatSession;
 import com.ezchat.entity.po.ChatSessionUser;
 import com.ezchat.entity.po.UserContact;
-import com.ezchat.entity.query.ChatSessionQuery;
-import com.ezchat.entity.query.ChatSessionUserQuery;
-import com.ezchat.entity.query.SimplePage;
+import com.ezchat.entity.query.*;
 import com.ezchat.entity.vo.PaginationResultVO;
 import com.ezchat.entity.po.ChatMessage;
-import com.ezchat.entity.query.ChatMessageQuery;
 import com.ezchat.enums.*;
 import com.ezchat.exception.BusinessException;
 import com.ezchat.mappers.ChatMessageMapper;
 import com.ezchat.mappers.ChatSessionMapper;
 import com.ezchat.mappers.ChatSessionUserMapper;
+import com.ezchat.mappers.UserContactMapper;
 import com.ezchat.redis.RedisComponent;
 import com.ezchat.service.ChatMessageService;
 import com.ezchat.utils.CopyUtils;
@@ -63,6 +61,8 @@ public class ChatMessageServiceImpl implements ChatMessageService {
     private MessageHandler messageHandler;
     @Autowired
     private AppConfig appconfig;
+    @Autowired
+    private UserContactMapper<UserContact, UserContactQuery> userContactMapper;
 
 
     /**
@@ -287,5 +287,54 @@ public class ChatMessageServiceImpl implements ChatMessageService {
         messageSendDTO.setMessageType(MessageTypeEnum.FILE_UPLOAD.getType());
         messageSendDTO.setContactId(chatMessage.getContactId());
         messageHandler.sendMessage(messageSendDTO);
+    }
+
+    /**
+     * 下载聊天文件
+     *
+     * @param tokenUserInfoDTO
+     * @param messageId
+     * @param showCover
+     * @return
+     */
+    @Override
+    public File downloadFile(TokenUserInfoDTO tokenUserInfoDTO, Long messageId, Boolean showCover) throws BusinessException {
+        ChatMessage chatMessage = chatMessageMapper.selectByMessageId(messageId);
+        String contactId = chatMessage.getContactId();
+        //鉴权
+        UserContactTypeEnum contactTypeEnum = UserContactTypeEnum.getByPrefix(contactId);
+        if (UserContactTypeEnum.USER.equals(contactTypeEnum) && !tokenUserInfoDTO.getUserId().equals(contactId)) {
+            //判断是否读取发送给自己的文件
+            throw new BusinessException(ResponseCodeEnum.CODE_600);
+        }
+        if (UserContactTypeEnum.GROUP.equals(contactTypeEnum)) {
+            //判断是否是群成员
+            UserContactQuery userContactQuery = new UserContactQuery();
+            userContactQuery.setUserId(tokenUserInfoDTO.getUserId());
+            userContactQuery.setContactType(UserContactTypeEnum.GROUP.getType());
+            userContactQuery.setContactId(contactId);
+            userContactQuery.setStatus(UserContactStatusEnum.FRIEND.getStatus());
+            Integer countCount = userContactMapper.selectCount(userContactQuery);
+            if (0 == countCount) {
+                throw new BusinessException(ResponseCodeEnum.CODE_600);
+            }
+        }
+        String month = DateUtils.format(new Date(chatMessage.getSendTime()), DateTimePatternEnum.YYYY_MM.getPattern());
+        File folder = new File(appconfig.getProjectFolder() + Constans.FILE_FOLDER_FILE + month);
+        if (!folder.exists()) {
+            folder.mkdirs();
+        }
+        String fileName = chatMessage.getFileName();
+        String fileExtName = StringTools.getFileSuffix(fileName);
+        String fileRealName = messageId + fileExtName;
+        if (showCover != null && showCover){
+            fileRealName = fileRealName + Constans.COVER_IMAGE_SUFFIX;
+        }
+        File file = new File(folder.getPath() + "/" + fileRealName);
+        if (!file.exists()){
+            logger.info("文件{}不存在",messageId);
+            throw new BusinessException(ResponseCodeEnum.CODE_602);
+        }
+        return null;
     }
 }

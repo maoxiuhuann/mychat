@@ -121,6 +121,17 @@ public class StringTools {
         return fileName.substring(fileName.lastIndexOf("."));
     }
 
+    //判断是否是数字
+    public static boolean isNumber(String str) {
+        String checkNumber = "^[0-9]+$";
+        if (null == str){
+            return false;
+        }
+        if (!str.matches(checkNumber)){
+            return false;
+        }
+        return true;
+    }
 }
 
 

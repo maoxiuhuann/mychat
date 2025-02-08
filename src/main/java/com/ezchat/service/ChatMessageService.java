@@ -8,6 +8,7 @@ import com.ezchat.entity.query.ChatMessageQuery;
 import com.ezchat.exception.BusinessException;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.util.List;
 /**
  * @Description:聊天消息表Service
@@ -75,4 +76,13 @@ public interface ChatMessageService {
 	 * @param cover
 	 */
 	void saveMessageFile(String sendUserId, Long messageId, MultipartFile file,MultipartFile cover) throws BusinessException;
+
+	/**
+	 * 下载聊天中的文件
+	 * @param tokenUserInfoDTO
+	 * @param fileId
+	 * @param showCover
+	 * @return
+	 */
+	File downloadFile(TokenUserInfoDTO tokenUserInfoDTO,Long fileId,Boolean showCover) throws BusinessException;
 }
