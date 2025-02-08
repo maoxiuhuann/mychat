@@ -6,6 +6,7 @@ import com.ezchat.entity.vo.PaginationResultVO;
 import com.ezchat.entity.po.ChatMessage;
 import com.ezchat.entity.query.ChatMessageQuery;
 import com.ezchat.exception.BusinessException;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 /**
@@ -65,4 +66,13 @@ public interface ChatMessageService {
 	 * @return
 	 */
     MessageSendDTO saveAndSendMessage(ChatMessage chatMessage, TokenUserInfoDTO tokenUserInfoDTO) throws BusinessException;
+
+	/**
+	 * 保存聊天文件到服务器
+	 * @param sendUserId
+	 * @param messageId
+	 * @param file
+	 * @param cover
+	 */
+	void saveMessageFile(String sendUserId, Long messageId, MultipartFile file,MultipartFile cover) throws BusinessException;
 }

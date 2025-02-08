@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -36,6 +37,19 @@ public class ChatController extends ABaseController {
     private AppConfig appConfig;
 
 
+    /**
+     * 发送消息，入库
+     *
+     * @param request
+     * @param contactId
+     * @param messageContent
+     * @param messageType
+     * @param fileSize
+     * @param fileName
+     * @param fileType
+     * @return
+     * @throws BusinessException
+     */
     @RequestMapping("/sendMessage")
     @GlobalInterceptor
     public ResponseVo sendMessage(HttpServletRequest request,
@@ -56,5 +70,15 @@ public class ChatController extends ABaseController {
         chatMessage.setMessageType(messageType);
         MessageSendDTO messageSendDTO = chatMessageService.saveAndSendMessage(chatMessage, tokenUserInfoDTO);
         return getSuccessResponseVo(messageSendDTO);
+    }
+
+    @RequestMapping("/uploadFile")
+    @GlobalInterceptor
+    public ResponseVo sendMessage(HttpServletRequest request, @NotNull Long messageId,
+                                  @NotNull MultipartFile file,
+                                  @NotNull MultipartFile cover) throws BusinessException {
+        TokenUserInfoDTO tokenUserInfoDTO = getTokenUserInfo(request);
+        chatMessageService.saveMessageFile(tokenUserInfoDTO.getUserId(), messageId, file, cover);
+        return getSuccessResponseVo(null);
     }
 }

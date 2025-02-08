@@ -63,4 +63,13 @@ public class Constans {
 
     //历史消息-三天前
     public static final Long MILLIS_SECONDS_MESSAGE_EXPIRE = 3 * 24 * 60 * 60 * 1000L;
+
+    //图片文件后缀
+    public static final String[] IMAGE_FILE_SUFFIX_LIST = new String[]{".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp"};
+
+    //视频文件后缀
+    public static final String[] VIDEO_FILE_SUFFIX_LIST = new String[]{".mp4", ".avi", ".rmvb", ".mov", ".wmv", ".flv"};
+
+    //文件大小转字节数
+    public static final Long FILE_SIZE_MB = 1024 * 1024L;
 }

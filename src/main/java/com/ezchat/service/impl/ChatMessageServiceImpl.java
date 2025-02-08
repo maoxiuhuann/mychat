@@ -1,6 +1,7 @@
 package com.ezchat.service.impl;
 
 import com.ezchat.constans.Constans;
+import com.ezchat.entity.config.AppConfig;
 import com.ezchat.entity.dto.MessageSendDTO;
 import com.ezchat.entity.dto.SysSettingDTO;
 import com.ezchat.entity.dto.TokenUserInfoDTO;
@@ -21,15 +22,23 @@ import com.ezchat.mappers.ChatSessionUserMapper;
 import com.ezchat.redis.RedisComponent;
 import com.ezchat.service.ChatMessageService;
 import com.ezchat.utils.CopyUtils;
+import com.ezchat.utils.DateUtils;
 import com.ezchat.utils.StringTools;
 import com.ezchat.webSocket.MessageHandler;
 import com.sun.org.apache.bcel.internal.generic.IF_ACMPEQ;
 import jdk.nashorn.internal.parser.Token;
 import org.apache.commons.lang3.ArrayUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
+import javax.validation.constraints.NotNull;
+import java.io.File;
+import java.io.IOException;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -39,6 +48,8 @@ import java.util.List;
  */
 @Service("chatMessageService")
 public class ChatMessageServiceImpl implements ChatMessageService {
+
+    private static final Logger logger = LoggerFactory.getLogger(ChatMessageServiceImpl.class);
 
     @Resource
     private ChatMessageMapper<ChatMessage, ChatMessageQuery> chatMessageMapper;
@@ -50,6 +61,8 @@ public class ChatMessageServiceImpl implements ChatMessageService {
     private ChatSessionMapper<ChatSession, ChatSessionQuery> chatSessionMapper;
     @Autowired
     private MessageHandler messageHandler;
+    @Autowired
+    private AppConfig appconfig;
 
 
     /**
@@ -177,7 +190,7 @@ public class ChatMessageServiceImpl implements ChatMessageService {
         //更新聊天会话表
         ChatSession chatSession = new ChatSession();
         chatSession.setLastMessage(messageContent);
-        if (UserContactTypeEnum.GROUP.equals(contactTypeEnum)){
+        if (UserContactTypeEnum.GROUP.equals(contactTypeEnum)) {
             chatSession.setLastMessage(tokenUserInfoDTO.getNickName() + ":" + messageContent);
         }
         chatSession.setLastReceiveTime(currentTime);
@@ -185,7 +198,7 @@ public class ChatMessageServiceImpl implements ChatMessageService {
 
         //发送消息
         MessageSendDTO messageSendDTO = CopyUtils.copy(chatMessage, MessageSendDTO.class);
-        if (Constans.ROBOT_UID.equals(contactId)){
+        if (Constans.ROBOT_UID.equals(contactId)) {
             SysSettingDTO sysSettingDTO = redisComponent.getSysSetting();
             TokenUserInfoDTO robot = new TokenUserInfoDTO();
             robot.setUserId(sysSettingDTO.getRobotUid());
@@ -197,10 +210,82 @@ public class ChatMessageServiceImpl implements ChatMessageService {
             robotMessage.setMessageType(MessageTypeEnum.CHAT.getType());
             //用户给机器人发消息，第一次设置的contactId是机器人的uid,再次调用这个方法时，contactId是用户的uid，进入else发送给用户
             saveAndSendMessage(robotMessage, robot);
-        }else {
+        } else {
             messageHandler.sendMessage(messageSendDTO);
         }
         return messageSendDTO;
     }
 
+    /**
+     * 保存聊天文件到服务器
+     *
+     * @param sendUserId
+     * @param messageId
+     * @param file
+     * @param cover
+     * @NotNull： 对于集合或字符串，只要不是 null，校验就通过，即使它是空的集合或空字符串。
+     * @NotEmpty： 对于集合或字符串，不仅要求它不能为 null，还要求它至少包含一个元素或字符。
+     */
+    @Override
+    public void saveMessageFile(String sendUserId, @NotNull Long messageId, @NotNull MultipartFile file, @NotNull MultipartFile cover) throws BusinessException {
+        ChatMessage chatMessage = chatMessageMapper.selectByMessageId(messageId);
+        //后端校验
+        if (null == chatMessage) {
+            throw new BusinessException(ResponseCodeEnum.CODE_601);
+        }
+        if (!chatMessage.getSendUserId().equals(sendUserId)) {
+            throw new BusinessException(ResponseCodeEnum.CODE_601);
+        }
+        SysSettingDTO sysSettingDTO = redisComponent.getSysSetting();
+        String fileSuffix = StringTools.getFileSuffix(file.getOriginalFilename());
+        if (!StringTools.isEmpty(fileSuffix)
+                && ArrayUtils.contains(Constans.IMAGE_FILE_SUFFIX_LIST, fileSuffix.toLowerCase())
+                && file.getSize() > sysSettingDTO.getMaxImageSize() * Constans.FILE_SIZE_MB) {
+            //图片大小超过限制
+            throw new BusinessException(ResponseCodeEnum.CODE_600);
+        } else if (!StringTools.isEmpty(fileSuffix)
+                && ArrayUtils.contains(Constans.VIDEO_FILE_SUFFIX_LIST, fileSuffix.toLowerCase())
+                && file.getSize() > sysSettingDTO.getMaxVideoSize() * Constans.FILE_SIZE_MB) {
+            //视频大小超过限制
+            throw new BusinessException(ResponseCodeEnum.CODE_600);
+        } else if (!StringTools.isEmpty(fileSuffix)
+                && !ArrayUtils.contains(Constans.VIDEO_FILE_SUFFIX_LIST, fileSuffix.toLowerCase())
+                && !ArrayUtils.contains(Constans.VIDEO_FILE_SUFFIX_LIST, fileSuffix.toLowerCase())
+                && file.getSize() > sysSettingDTO.getMaxFileSize() * Constans.FILE_SIZE_MB) {
+            //其他类型文件大小超过限制
+            throw new BusinessException(ResponseCodeEnum.CODE_600);
+        }
+        //防止相同文件名覆盖
+        String fileName = file.getOriginalFilename();
+        String fileExtName = StringTools.getFileSuffix(fileName);
+        String fileRealName = messageId + fileExtName;
+        //格式化时间
+        String month = DateUtils.format(new Date(chatMessage.getSendTime()), DateTimePatternEnum.YYYY_MM.getPattern());
+        File folder = new File(appconfig.getProjectFolder() + Constans.FILE_FOLDER_FILE + month);
+        if (!folder.exists()) {
+            folder.mkdirs();
+        }
+        File uploadFile = new File(folder.getPath() + "/" + fileRealName);
+        try {
+            file.transferTo(uploadFile);
+            //TODO 只有filetype是0,1才保存封面图片? COVER改成NOTEMPTY?
+            cover.transferTo(new File(uploadFile.getPath() + "_cover" + fileExtName));
+        } catch (IOException e) {
+            logger.error("保存聊天文件到服务器失败");
+        }
+        ChatMessage uploadInfo = new ChatMessage();
+        uploadInfo.setStatus(MessageStatusEnum.SENDED.getStatus());
+        ChatMessageQuery chatMessageQuery = new ChatMessageQuery();
+        //UPDATE chat_message set status = 1 where message_id = #{messageId} and status = 0，防止重复发送，乐观锁
+        chatMessageQuery.setMessageId(messageId);
+        chatMessageQuery.setStatus(MessageStatusEnum.SENDING.getStatus());
+        chatMessageMapper.updateByQuery(uploadInfo, chatMessageQuery);
+
+        MessageSendDTO messageSendDTO = new MessageSendDTO();
+        messageSendDTO.setStatus(MessageStatusEnum.SENDED.getStatus());
+        messageSendDTO.setMessageId(messageId);
+        messageSendDTO.setMessageType(MessageTypeEnum.FILE_UPLOAD.getType());
+        messageSendDTO.setContactId(chatMessage.getContactId());
+        messageHandler.sendMessage(messageSendDTO);
+    }
 }
