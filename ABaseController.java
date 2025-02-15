@@ -49,10 +49,6 @@ public class ABaseController {
         return responseVo;
     }
 
-    protected TokenUserInfoDTO getTokenUserInfo(HttpServletRequest request) {
-        String token = request.getHeader("token");
-        TokenUserInfoDTO tokenUserInfoDTO = (TokenUserInfoDTO) redisUtils.get(Constans.REDIS_KEY_WS_TOKEN + token);
-        return tokenUserInfoDTO;
-    }
+
 
 }
