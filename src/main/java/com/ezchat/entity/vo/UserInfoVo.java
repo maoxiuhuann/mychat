@@ -46,7 +46,6 @@ public class UserInfoVo {
      */
     private Integer contactStatus;
 
-
     public String getUserId() {
         return userId;
     }

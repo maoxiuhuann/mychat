@@ -69,9 +69,9 @@ public class AccountController extends ABaseController {
         String checkCodeBase64 = captcha.toBase64();
         //规范做法是定义一个vo接收
         Map<String, String> result = new HashMap<>();
-        result.put("checkCodeBase64", checkCodeBase64);
+        result.put("checkCode", checkCodeBase64);
         result.put("checkCodeKey", checkCodeKey);
-        return getSuccessResponseVo(checkCodeBase64);
+        return getSuccessResponseVo(result);
     }
 
     /**
@@ -111,7 +111,7 @@ public class AccountController extends ABaseController {
                 throw new BusinessException("图片验证码错误");
             }
             UserInfoVo userInfoVo = userInfoService.login(email, password);
-            return getSuccessResponseVo(null);
+            return getSuccessResponseVo(userInfoVo);
         } finally {
             redisUtils.delete(Constans.REDIS_KEY_CHECK_CODE + checkCodeKey);
         }

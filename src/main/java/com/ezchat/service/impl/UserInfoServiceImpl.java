@@ -34,6 +34,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -220,14 +221,14 @@ public class UserInfoServiceImpl implements UserInfoService {
         //用户心跳判断用户是否在其他地方登录
         Long lastHeartBeat = redisComponent.getUserHeartBeat(userInfo.getUserId());
         //阻断式处理，不符合条件的直接抛出异常，只处理符合条件的情况
-        if (null == userInfo || !StringTools.encodeMd5(password).equals(userInfo.getPassword())) {
+        if (null == userInfo || !Objects.requireNonNull(StringTools.encodeMd5(password)).equals(userInfo.getPassword())) {
             throw new BusinessException("账号或密码错误");
         }
         if (UserStatusEnum.DISABLE.getStatus().equals(userInfo.getStatus())) {
             throw new BusinessException("账号已停用");
         }
         if (null != lastHeartBeat) {
-            throw new BusinessException("账号已在其他地方登录");
+            throw new BusinessException("账号已在其他地方登录,无法再次登录");
         }
         //查询联系人
         UserContactQuery userContactQuery = new UserContactQuery();

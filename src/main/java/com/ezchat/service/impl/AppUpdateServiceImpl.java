@@ -41,6 +41,7 @@ public class AppUpdateServiceImpl implements AppUpdateService {
     /**
      * 根据条件查询列表
      */
+    @Override
     public List<AppUpdate> findListByParam(AppUpdateQuery query) {
         return this.appUpdateMapper.selectList(query);
     }
