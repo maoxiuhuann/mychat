@@ -173,9 +173,9 @@ public class GroupInfoServiceImpl implements GroupInfoService {
             if (count >= sysSettingDTO.getMaxGroupCount()) {
                 throw new BusinessException("最多只能创建" + sysSettingDTO.getMaxGroupCount() + "个群聊，群组数量已达上限，无法创建新的群组！");
             }
-
+            //必须上传头像
             if (null == avatarFile) {
-                throw new BusinessException(ResponseCodeEnum.CODE_600);
+                //throw new BusinessException(ResponseCodeEnum.CODE_600);
             }
 
             groupInfo.setCreateTime(currentDate);

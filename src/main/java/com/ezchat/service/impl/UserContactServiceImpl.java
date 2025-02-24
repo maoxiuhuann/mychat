@@ -170,7 +170,7 @@ public class UserContactServiceImpl implements UserContactService {
         }
         resultDTO.setContactType(typeEnum.toString());
         resultDTO.setContactId(contactId);
-
+        //如果搜索自己
         if (userId.equals(contactId)) {
             resultDTO.setStatus(UserContactStatusEnum.FRIEND.getStatus());
             return resultDTO;
