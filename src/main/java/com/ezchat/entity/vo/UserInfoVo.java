@@ -46,6 +46,8 @@ public class UserInfoVo {
      */
     private Integer contactStatus;
 
+    private  Integer joinType;
+
     public String getUserId() {
         return userId;
     }
@@ -116,5 +118,13 @@ public class UserInfoVo {
 
     public void setContactStatus(Integer contactStatus) {
         this.contactStatus = contactStatus;
+    }
+
+    public Integer getJoinType() {
+        return joinType;
+    }
+
+    public void setJoinType(Integer joinType) {
+        this.joinType = joinType;
     }
 }

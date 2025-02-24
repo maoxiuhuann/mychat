@@ -72,7 +72,7 @@ public class UserInfoController extends ABaseController{
 
         this.userInfoService.updateUserInfo(userInfo, avatarFile, avatarCover);
 
-        return getSuccessResponseVo(request);
+        return getSuccessResponseVo(null);
     }
 
     /**

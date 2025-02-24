@@ -151,7 +151,7 @@ public class UserContactController extends ABaseController {
         UserContactQuery query = new UserContactQuery();
         query.setUserId(tokenUserInfoDTO.getUserId());
         query.setContactType(contactTypeEnum.getType());
-        // todo 如果用户首次向对方发生申请就被拉黑了，则对方不显示在自己的联系人列表中
+        // 如果用户首次向对方发生申请就被拉黑了，则对方不显示在自己的联系人列表中
         if (contactTypeEnum.USER == contactTypeEnum) {
             //加载联系人的昵称-用户查看自己的联系人列表时，需要显示联系人的昵称
             query.setQueryContactUserInfo(true);
@@ -164,7 +164,6 @@ public class UserContactController extends ABaseController {
         //状态数组-有些状态的联系人需要过滤掉-被好友拉黑能够看到好友，但是不能发消息
         query.setStatusArray(new Integer[]{UserContactStatusEnum.FRIEND.getStatus(), UserContactStatusEnum.DEL_BE.getStatus(), UserContactStatusEnum.BLACKLIST_BE.getStatus()});
         List<UserContact> contactList = userContactService.findListByParam(query);
-        //TODO 向对方发送申请对方没同意过就被被拉黑的，则对方不显示在自己的联系人列表中
         return getSuccessResponseVo(contactList);
     }
 
