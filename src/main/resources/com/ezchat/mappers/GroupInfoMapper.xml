@@ -97,6 +97,7 @@
 	<!--查询数量-->
 	<select id="selectCount" resultType="java.lang.Integer">
 		SELECT count(1) FROM group_info <include refid="query_condition"/>
+		<if test="query.status != null"> and status = #{query.status} </if>
 	</select>
 
 	<!--插入（匹配有值的字段）-->

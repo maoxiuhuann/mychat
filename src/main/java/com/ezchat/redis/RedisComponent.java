@@ -35,7 +35,7 @@ public class RedisComponent {
      */
     //todo 测试时为了方便将心跳时间改为30分钟，后期改为六秒
     public void saveUserHeartBeat(String userId) {
-        redisUtils.setex(Constans.REDIS_KEY_WS_USER_HEART_BEAT + userId, System.currentTimeMillis(), Constans.REDIS_TIME_1MIN * 30);
+        redisUtils.setex(Constans.REDIS_KEY_WS_USER_HEART_BEAT + userId, System.currentTimeMillis(), Constans.REDIS_TIME_1MIN / 10);
     }
 
     public void removeUserHeartBeat(String userId) {
@@ -159,5 +159,22 @@ public class RedisComponent {
      */
     public void removeUserContact(String userId, String contactId) {
         redisUtils.remove(Constans.REDIS_KEY_USER_CONTACT + userId, contactId);
+    }
+
+    /**
+     * 获取用户的上一次登录token
+     * @param userId
+     * @return
+     */
+    public String getLastTokenByUserId(String userId) {
+        return (String) redisUtils.get(Constans.REDIS_KEY_WS_TOKEN_USERID + userId);
+    }
+
+    /**
+     * 清除用户的上一次登录的tokenuserinfo
+     * @param lastToken
+     */
+    public void removeLastTokenUserInfoDTO(String lastToken) {
+        redisUtils.delete(Constans.REDIS_KEY_WS_TOKEN + lastToken);
     }
 }

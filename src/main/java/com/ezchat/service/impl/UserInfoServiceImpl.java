@@ -242,6 +242,11 @@ public class UserInfoServiceImpl implements UserInfoService {
             redisComponent.addUserContactBatch(userInfo.getUserId(), contactIds);
         }
         TokenUserInfoDTO tokenUserInfoDTO = getTokenUserInfoDTO(userInfo);
+        //登录前先清空redis缓存的token
+        String lastToken = redisComponent.getLastTokenByUserId(tokenUserInfoDTO.getUserId());
+        if (null != lastToken){
+            redisComponent.removeLastTokenUserInfoDTO(lastToken);
+        }
         //保存登录信息tokenUserInfoDTO到redis
         String token = StringTools.encodeMd5(tokenUserInfoDTO.getUserId() + StringTools.getRandomString(Constans.LENGTH_20));
         tokenUserInfoDTO.setToken(token);

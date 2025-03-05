@@ -132,7 +132,6 @@ public class GroupInfoController extends ABaseController {
      */
     @RequestMapping("/getGroupInfo4Chat")
     @GlobalInterceptor
-
     public ResponseVo getGroupInfo4Chat(HttpServletRequest request,
                                         @NotEmpty String groupId) throws BusinessException {
         GroupInfo groupInfo = getGroupDetailCommon(request, groupId);

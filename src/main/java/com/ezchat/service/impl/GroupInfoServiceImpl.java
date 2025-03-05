@@ -167,13 +167,14 @@ public class GroupInfoServiceImpl implements GroupInfoService {
         if (StringTools.isEmpty(groupInfo.getGroupId())) {
             GroupInfoQuery query = new GroupInfoQuery();
             query.setGroupOwnerId(groupInfo.getGroupOwnerId());
+            query.setStatus(1);
             //查询群主已经创建的群数量
             Integer count = this.groupInfoMapper.selectCount(query);
             SysSettingDTO sysSettingDTO = redisComponent.getSysSetting();
             if (count >= sysSettingDTO.getMaxGroupCount()) {
                 throw new BusinessException("最多只能创建" + sysSettingDTO.getMaxGroupCount() + "个群聊，群组数量已达上限，无法创建新的群组！");
             }
-            //必须上传头像
+            //todo 必须上传头像
             if (null == avatarFile) {
                 //throw new BusinessException(ResponseCodeEnum.CODE_600);
             }

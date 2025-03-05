@@ -46,7 +46,7 @@ public class UserContactApplyServiceImpl implements UserContactApplyService {
     private UserContactMapper<UserContact, UserContactQuery> userContactMapper;
 
     @Resource
-    private UserContactService  userContactService;
+    private UserContactService userContactService;
 
     @Resource
     private ChannelContextUtils channelContextUtils;
@@ -59,7 +59,6 @@ public class UserContactApplyServiceImpl implements UserContactApplyService {
 
     @Resource
     private GroupInfoMapper<GroupInfo, GroupInfoQuery> groupInfoMapper;
-
 
 
     /**
@@ -210,7 +209,6 @@ public class UserContactApplyServiceImpl implements UserContactApplyService {
             return joinType;
         }
         //查询数据库中是否已经有申请记录
-        //todo 下面代码修改过，修改前的只有if-else
         UserContactApply dbApply = this.userContactApplyMapper.selectByApplyUserIdAndReceiveUserIdAndContactId(applyUserId, receiveUserId, contactId);
         if (null == dbApply) {
             UserContactApply apply = new UserContactApply();
@@ -222,17 +220,13 @@ public class UserContactApplyServiceImpl implements UserContactApplyService {
             apply.setStatus(UserContactApplyStatusEnum.INIT.getStatus());
             apply.setApplyInfo(applyInfo);
             this.userContactApplyMapper.insert(apply);
-        } else if (dbApply.getStatus().equals(UserContactApplyStatusEnum.INIT.getStatus()) || dbApply.getStatus().equals(UserContactApplyStatusEnum.REJECT.getStatus())) {
+        } else {
             //如果已经有申请记录，则更新申请信息
             UserContactApply apply = new UserContactApply();
             apply.setStatus(UserContactApplyStatusEnum.INIT.getStatus());
             apply.setLastApplyTime(currentTime);
             apply.setApplyInfo(applyInfo);
             this.userContactApplyMapper.updateByApplyId(apply, dbApply.getApplyId());
-        }else if (dbApply.getStatus().equals(UserContactApplyStatusEnum.BLACKLIST.getStatus())){
-            throw new BusinessException("对方以将你拉黑，无法添加");
-        }else {
-            throw new BusinessException("你已是该群的成员，无法重复申请加入");
         }
         // 发送申请信息给接收方
         if (dbApply == null || !UserContactApplyStatusEnum.INIT.getStatus().TYPE.equals(dbApply.getStatus())) {
@@ -297,7 +291,6 @@ public class UserContactApplyServiceImpl implements UserContactApplyService {
             userContactMapper.insertOrUpdate(userContact);
         }
     }
-
 
 
 }

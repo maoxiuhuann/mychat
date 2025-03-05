@@ -13,6 +13,7 @@ import com.ezchat.enums.UserContactStatusEnum;
 import com.ezchat.enums.UserContactTypeEnum;
 import com.ezchat.mappers.ChatSessionUserMapper;
 import com.ezchat.mappers.UserContactMapper;
+import com.ezchat.redis.RedisComponent;
 import com.ezchat.service.ChatSessionUserService;
 import com.ezchat.webSocket.MessageHandler;
 import com.sun.org.apache.bcel.internal.generic.IF_ACMPEQ;
@@ -37,6 +38,8 @@ public class ChatSessionUserServiceImpl implements ChatSessionUserService {
 	private MessageHandler messageHandler;
     @Autowired
     private UserContactMapper userContactMapper;
+    @Autowired
+    private RedisComponent redisComponent;
 
 	/**
 	 * 根据条件查询列表
@@ -121,7 +124,7 @@ public class ChatSessionUserServiceImpl implements ChatSessionUserService {
 	 */
 	public void updateRedundanceInfo(String contactName,String contactId){
 		ChatSessionUser updateInfo = new ChatSessionUser();
-		updateInfo.setContactName(contactId);
+		updateInfo.setContactName(contactName);
 		ChatSessionUserQuery chatSessionUserQuery = new ChatSessionUserQuery();
 		chatSessionUserQuery.setContactId(contactId);
 		chatSessionUserMapper.updateByQuery(updateInfo,chatSessionUserQuery);
@@ -134,21 +137,33 @@ public class ChatSessionUserServiceImpl implements ChatSessionUserService {
 			messageSendDTO.setMessageType(MessageTypeEnum.CONTEXT_NAME_UPDATE.getType());
 			messageHandler.sendMessage(messageSendDTO);
 		}else {
-			UserContactQuery userContactQuery = new UserContactQuery();
-			userContactQuery.setContactType(UserContactTypeEnum.USER.getType());
-			userContactQuery.setContactId(contactId);
-			userContactQuery.setStatus(UserContactStatusEnum.FRIEND.getStatus());
-			List<UserContact> userContactList = userContactMapper.selectList(userContactQuery);
-			for (UserContact userContact : userContactList){
+
+			List<String> userContactIdList = redisComponent.getUserContactList(contactId);
+			for (String id : userContactIdList){
 				MessageSendDTO messageSendDTO = new MessageSendDTO();
 				messageSendDTO.setContactType(userContactTypeEnum.getType());
-				messageSendDTO.setContactId(userContact.getUserId());
+				messageSendDTO.setContactId(id);
 				messageSendDTO.setExtendData(contactName);
 				messageSendDTO.setMessageType(MessageTypeEnum.CONTEXT_NAME_UPDATE.getType());
 				messageSendDTO.setSendUserId(contactId);
 				messageSendDTO.setSendUserNickName(contactName);
 				messageHandler.sendMessage(messageSendDTO);
 			}
+//			UserContactQuery userContactQuery = new UserContactQuery();
+//			userContactQuery.setContactType(UserContactTypeEnum.USER.getType());
+//			userContactQuery.setContactId(contactId);
+//			userContactQuery.setStatus(UserContactStatusEnum.FRIEND.getStatus());
+//			List<UserContact> userContactList = userContactMapper.selectList(userContactQuery);
+//			for (UserContact userContact : userContactList){
+//				MessageSendDTO messageSendDTO = new MessageSendDTO();
+//				messageSendDTO.setContactType(userContactTypeEnum.getType());
+//				messageSendDTO.setContactId(userContact.getUserId());
+//				messageSendDTO.setExtendData(contactName);
+//				messageSendDTO.setMessageType(MessageTypeEnum.CONTEXT_NAME_UPDATE.getType());
+//				messageSendDTO.setSendUserId(contactId);
+//				messageSendDTO.setSendUserNickName(contactName);
+//				messageHandler.sendMessage(messageSendDTO);
+//			}
 		}
 	}
 }

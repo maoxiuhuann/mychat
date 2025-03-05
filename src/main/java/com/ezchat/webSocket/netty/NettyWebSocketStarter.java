@@ -73,7 +73,7 @@ public class NettyWebSocketStarter implements Runnable {
                             pipeline.addLast(new HttpObjectAggregator(64 * 1024));
                             //心跳 long readerIdleTime, long writerIdleTime, long allIdleTime, TimeUnit unit
                             //读超时时间，写超时时间，所有超时类型时间，单位-设置心跳规则
-                            pipeline.addLast(new IdleStateHandler(60 * 30, 0, 0, TimeUnit.SECONDS));
+                            pipeline.addLast(new IdleStateHandler(6, 0, 0, TimeUnit.SECONDS));
                             //自定义处理器-处理心跳
                             pipeline.addLast(new HandlerHeartBeat());
                             //添加一个 WebSocket 协议处理器 WebSocketServerProtocolHandler，将 HTTP 升级为 WebSocket。参数 "/ws": 指定 WebSocket 的 URI。
